@@ -3,8 +3,8 @@ package base
 import (
 	"fmt"
 
-	"icode.baidu.com/baidu/blockchain/xasset-sdk-go/auth"
-	"icode.baidu.com/baidu/blockchain/xasset-sdk-go/common/config"
+	"github.com/xuperchain/xasset-sdk-go/auth"
+	"github.com/xuperchain/xasset-sdk-go/common/config"
 )
 
 const (
