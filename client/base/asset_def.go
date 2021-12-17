@@ -276,6 +276,7 @@ type QueryAssetMeta struct {
 ////////// Grant Asset /////////////
 type GrantAssetParam struct {
 	AssetId  int64         `json:"asset_id"`
+	ShardId  int64         `json:"shard_id"`
 	Account  *auth.Account `json:"account"`
 	Addr     string        `json:"addr"`
 	ToAddr   string        `json:"to_addr"`

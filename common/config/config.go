@@ -29,7 +29,7 @@ func NewXassetCliConf() *XassetCliConfig {
 		UserAgent: UserAgentDefault,
 		SignOption: &auth.SignOptions{
 			HeadersToSign: auth.DEFAULT_HEADERS_TO_SIGN,
-			Timestamp:     time.Now().Unix(),
+			Timestamp:     0,
 			ExpireSeconds: auth.DEFAULT_EXPIRE_SECONDS,
 		},
 		ConnectTimeoutMs:   ConnectTimeoutMsDef,
