@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/xuperchain/xasset-sdk-go/auth"
 )
