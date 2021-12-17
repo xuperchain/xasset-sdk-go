@@ -426,11 +426,16 @@ func (t *AssetOper) QueryAsset(param *xbase.QueryAssetParam) (*xbase.QueryAssetR
 // 	  }
 func (t *AssetOper) genGrantAssetBody(appid int64, param *xbase.GrantAssetParam) (string, error) {
 	nonce := utils.GenNonce()
-	shardId := utils.GenAssetId(appid)
 	signMsg := fmt.Sprintf("%d%d", param.AssetId, nonce)
 	sign, err := auth.XassetSignECDSA(param.Account.PrivateKey, []byte(signMsg))
 	if err != nil {
 		return "", xbase.ComErrAccountSignFailed
+	}
+
+	// 未指定shard_id，生成一个唯一值
+	shardId := param.ShardId
+	if shardId < 1 {
+		shardId = utils.GenNonce()
 	}
 
 	v := url.Values{}

@@ -65,7 +65,7 @@ func Sign(req *http.Request, cred *Credentials, opt *SignOptions) (string, error
 	signDate := util.FormatISO8601Date(util.NowUTCSeconds())
 
 	// Modify the sign time if it is not the default value but specified by client
-	if opt.Timestamp != 0 {
+	if opt.Timestamp > 0 {
 		signDate = util.FormatISO8601Date(opt.Timestamp)
 	}
 	if opt.HeadersToSign == nil {
