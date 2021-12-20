@@ -57,3 +57,22 @@ func NewXchainEcdsaAccount(strg MnemStrgth, lang MnemLang) (*Account, error) {
 
 	return acc, nil
 }
+
+// 根据助记词生成历史账户
+func RetrieveAccountByMnemonic(mnemonic string, language int) (*Account, error) {
+	cryptoCli := &xchain.XchainCryptoClient{}
+
+	acount, err := cryptoCli.RetrieveAccountByMnemonic(mnemonic, language)
+	if err != nil {
+		return nil, err
+	}
+
+	acc := &Account{
+		Address:    acount.Address,
+		PrivateKey: acount.JsonPrivateKey,
+		PublicKey:  acount.JsonPublicKey,
+		Mnemonic:   acount.Mnemonic,
+	}
+
+	return acc, nil
+}
