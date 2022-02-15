@@ -80,6 +80,7 @@ func BridgeTest(account *auth.Account, handle *AssetOper, resp interface{}, proc
 
 func CreateTestAsset(account *auth.Account, handle *AssetOper, resp interface{}) (*AssetOper, interface{}, error) {
 	param := base.CreateAssetParam{
+		Price:  10010,
 		Amount: 100,
 		AssetInfo: &base.CreateAssetInfo{
 			AssetCate: base.AssetCateArt,
@@ -122,6 +123,7 @@ func TestAlterAsset(t *testing.T) {
 		return
 	}
 	param := base.AlterAssetParam{
+		Price:   10011,
 		Amount:  200,
 		AssetId: value.AssetId,
 		Account: base.TestAccount,
@@ -167,11 +169,12 @@ func TestQueryAsset(t *testing.T) {
 	param := &base.QueryAssetParam{
 		AssetId: value.AssetId,
 	}
-	_, _, err = handle.QueryAsset(param)
+	resp, _, err = handle.QueryAsset(param)
 	if err != nil {
 		t.Errorf("query asset error. err: %v", err)
 		return
 	}
+	t.Logf("Query Asset, asset_id: %d, resp: %+v", value.AssetId, resp)
 }
 
 func GrantTestAsset(account *auth.Account, handle *AssetOper, resp interface{}) (*AssetOper, interface{}, error) {
@@ -181,6 +184,7 @@ func GrantTestAsset(account *auth.Account, handle *AssetOper, resp interface{}) 
 	}
 	param := &base.GrantAssetParam{
 		AssetId: value.AssetId,
+		Price:   10012,
 		Account: account,
 		Addr:    account.Address,
 		ToAddr:  base.TestTransAccount.Address,
@@ -241,12 +245,13 @@ func TestGrantNTransAsset(t *testing.T) {
 	if nResp.Meta.OwnerAddr != base.TestAccount.Address {
 		t.Errorf("query shard error. owner: %s", nResp.Meta.OwnerAddr)
 	}
+	t.Logf("Query Asset, asset_id: %d, shard_id: %d, resp: %+v", assetId, shardId, nResp)
 }
 
 func TestListShardsByAddr(t *testing.T) {
 	handle, _ := NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
 	param := &base.ListShardsByAddrParam{
-		Addr:  base.TestTransAccount.Address,
+		Addr:  base.TestAccount.Address,
 		Page:  1,
 		Limit: 20,
 	}
@@ -259,6 +264,27 @@ func TestListShardsByAddr(t *testing.T) {
 		t.Error("read asset error")
 		return
 	}
+	t.Logf("Query srds, param: %+v, resp: %+v", param, lResp)
+}
+
+func TestListAssetByAddr(t *testing.T) {
+	handle, _ := NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
+	param := &base.ListAssetsByAddrParam{
+		Addr:   base.TestAccount.Address,
+		Status: 4,
+		Page:   1,
+		Limit:  20,
+	}
+	lResp, _, err := handle.ListAssetsByAddr(param)
+	if err != nil {
+		t.Errorf("list asset error. err: %v", err)
+		return
+	}
+	if lResp.TotalCnt <= 0 {
+		t.Error("read asset error")
+		return
+	}
+	t.Logf("Query ast, param: %+v, resp: %+v", param, lResp)
 }
 
 func EvidenceTestAsset(account *auth.Account, handle *AssetOper, resp interface{}) (*AssetOper, interface{}, error) {
@@ -318,6 +344,7 @@ func TransferTestAsset(account *auth.Account, handle *AssetOper, resp interface{
 	param := &base.TransferAssetParam{
 		AssetId: value.AssetId,
 		ShardId: value.ShardId,
+		Price:   10013,
 		Account: account,
 		Addr:    account.Address,
 		ToAddr:  base.TestAccount.Address,

@@ -148,6 +148,7 @@ func (t *AssetOper) UploadFile(param *xbase.UploadFileParam) (*xbase.UploadFileR
 // GenCreateAssetBody uses the parameter as follows,
 // {
 // 		AssetId   int64  `json:"asset_id"`
+// 		Price     int64  `json:"price"`
 // 		Amount    int    `json:"amount"`
 // 		AssetInfo string `json:"asset_info"`
 // 		Addr      string `json:"addr"`
@@ -171,6 +172,7 @@ func (t *AssetOper) genCreateAssetBody(appid int64, param *xbase.CreateAssetPara
 
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", assetId))
+	v.Set("price", fmt.Sprintf("%d", param.Price))
 	v.Set("amount", fmt.Sprintf("%d", param.Amount))
 	v.Set("asset_info", string(assetInfo))
 	v.Set("addr", param.Account.Address)
@@ -248,6 +250,9 @@ func (t *AssetOper) genAlterAssetBody(param *xbase.AlterAssetParam) (string, err
 	v.Set("pkey", param.Account.PublicKey)
 	v.Set("nonce", fmt.Sprintf("%d", nonce))
 
+	if err := xbase.PriceInvalid(param.Price); err == nil {
+		v.Set("price", fmt.Sprintf("%d", param.Price))
+	}
 	if err := xbase.AmountInvalid(param.Amount); err == nil {
 		v.Set("amount", fmt.Sprintf("%d", param.Amount))
 	}
@@ -262,6 +267,8 @@ func (t *AssetOper) genAlterAssetBody(param *xbase.AlterAssetParam) (string, err
 	return body, nil
 }
 
+// AlterAsset Empty price makes the asset with a zero price value. If you don't want to alter the price parameter, set price to -1.
+// Empty amount makes the asset with an endless supply of shards. If you don't want to alter the amount parameter, set amount to -1.
 func (t *AssetOper) AlterAsset(param *xbase.AlterAssetParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
 	if err := param.Valid(); err != nil {
 		return nil, nil, err
@@ -441,6 +448,7 @@ func (t *AssetOper) genGrantAssetBody(appid int64, param *xbase.GrantAssetParam)
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
 	v.Set("shard_id", fmt.Sprintf("%d", shardId))
+	v.Set("price", fmt.Sprintf("%d", param.Price))
 	v.Set("addr", param.Addr)
 	v.Set("sign", sign)
 	v.Set("pkey", param.Account.PublicKey)
@@ -590,6 +598,51 @@ func (t *AssetOper) ListShardsByAddr(param *xbase.ListShardsByAddrParam) (*xbase
 	return &resp, res, nil
 }
 
+func (t *AssetOper) genListAssetByAddrBody(param *xbase.ListAssetsByAddrParam) (string, error) {
+	v := url.Values{}
+	v.Set("addr", param.Addr)
+	v.Set("status", fmt.Sprintf("%d", param.Status))
+	v.Set("page", fmt.Sprintf("%d", param.Page))
+	v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) ListAssetsByAddr(param *xbase.ListAssetsByAddrParam) (*xbase.ListPageResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, _ := t.genListAssetByAddrBody(param)
+
+	res, err := t.Post(xbase.AssetApiListAssetByAddr, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.ListPageResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [total_cnt: %d] [url: %s] [request_id: %s] [trace_id: %s]", resp.TotalCnt,
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
 // GenEvidenceBody uses the general parameter for getting shard as follows,
 //    {
 // 		   AssetId  int64  `json:"asset_id"`
@@ -642,6 +695,7 @@ func (t *AssetOper) GetEvidenceInfo(param *xbase.GetEvidenceInfoParam) (*xbase.G
 //    {
 // 		   AssetId  int64  `json:"asset_id"`
 // 		   ShardId  int64  `json:"shard_id"`
+//		   Price	int64  `json:"price"`
 // 		   Addr     string `json:"addr"`
 // 		   Sign     string `json:"sign"`
 // 		   PKey     string `json:"pkey"`
@@ -660,6 +714,7 @@ func (t *AssetOper) genTransferAssetBody(param *xbase.TransferAssetParam) (strin
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
 	v.Set("shard_id", fmt.Sprintf("%d", param.ShardId))
+	v.Set("price", fmt.Sprintf("%d", param.Price))
 	v.Set("addr", param.Addr)
 	v.Set("sign", sign)
 	v.Set("pkey", param.Account.PublicKey)
