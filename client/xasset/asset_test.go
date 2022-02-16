@@ -210,9 +210,11 @@ func TestGrantNTransAsset(t *testing.T) {
 	}
 
 	// waiting for data be send to the chain
-	waitT := time.Duration(60)
+	waitT := time.Duration(30)
 	time.Sleep(waitT * time.Second)
 	// do GrantAsset
+	BridgeTest(base.TestAccount, handle, resp, GrantTestAsset)
+
 	handle, resp, err = BridgeTest(base.TestAccount, handle, resp, GrantTestAsset)
 	if err != nil {
 		t.Errorf("grant asset error. err: %v, status: %d", err, resp.(int))
@@ -225,7 +227,7 @@ func TestGrantNTransAsset(t *testing.T) {
 
 	time.Sleep(waitT * time.Second)
 	// do TransferAsset
-	handle, resp, err = BridgeTest(base.TestTransAccount, handle, resp, TransferTestAsset)
+	handle, _, err = BridgeTest(base.TestTransAccount, handle, resp, TransferTestAsset)
 	if err != nil {
 		t.Errorf("transfer asset error. err: %v", err)
 		return
@@ -246,6 +248,21 @@ func TestGrantNTransAsset(t *testing.T) {
 		t.Errorf("query shard error. owner: %s", nResp.Meta.OwnerAddr)
 	}
 	t.Logf("Query Asset, asset_id: %d, shard_id: %d, resp: %+v", assetId, shardId, nResp)
+
+	param := &base.ListShardsByAssetParam{
+		AssetId: assetId,
+		Limit:   1,
+	}
+	lResp, _, err := handle.ListShardsByAsset(param)
+	if err != nil {
+		t.Errorf("list asset error. err: %v", err)
+		return
+	}
+	if err != nil {
+		t.Error("read asset error")
+		return
+	}
+	t.Logf("Query srds by asset, param: %+v, resp: %+v", param, lResp)
 }
 
 func TestListShardsByAddr(t *testing.T) {
