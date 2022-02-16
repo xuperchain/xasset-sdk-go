@@ -13,6 +13,7 @@ const (
 	AssetApiTransfer         = "/xasset/damocles/v1/transfer"
 	AssetApiQueryShard       = "/xasset/horae/v1/querysds"
 	AssetApiListShardsByAddr = "/xasset/horae/v1/listsdsbyaddr"
+	AssetApiListAssetByAddr  = "/xasset/horae/v1/listastbyaddr"
 	AssetApiGetEvidenceInfo  = "/xasset/horae/v1/getevidenceinfo"
 	FileApiGetStoken         = "/xasset/file/v1/getstoken"
 )
@@ -122,6 +123,7 @@ func CreateAssetInfoValid(p *CreateAssetInfo) error {
 }
 
 type CreateAssetParam struct {
+	Price     int64            `json:"price,omitempty"`
 	Amount    int              `json:"amount"`
 	AssetInfo *CreateAssetInfo `json:"asset_info"`
 	Account   *auth.Account    `json:"account"`
@@ -131,6 +133,9 @@ type CreateAssetParam struct {
 func (t *CreateAssetParam) Valid() error {
 	if t == nil {
 		return ErrNilPointer
+	}
+	if err := PriceInvalid(t.Price); err != nil {
+		return err
 	}
 	if err := AmountInvalid(t.Amount); err != nil {
 		return err
@@ -187,6 +192,7 @@ func AlterAssetInfoValid(p *AlterAssetInfo) error {
 
 type AlterAssetParam struct {
 	AssetId   int64           `json:"asset_id"`
+	Price     int64           `json:"price,omitempty"`
 	Amount    int             `json:"amount,omitempty"`
 	AssetInfo *AlterAssetInfo `json:"asset_info"`
 	Account   *auth.Account   `json:"account"`
@@ -201,8 +207,9 @@ func (t *AlterAssetParam) Valid() error {
 		return err
 	}
 	errInfo := AlterAssetInfoValid(t.AssetInfo)
+	errPrice := PriceInvalid(t.Price)
 	errAmount := AmountInvalid(t.Amount)
-	if errInfo != nil && errAmount != nil {
+	if errInfo != nil && errAmount != nil && errPrice != nil {
 		return ErrAlterAssetInvalid
 	}
 	if err := AccountValid(t.Account); err != nil {
@@ -265,6 +272,7 @@ type QueryAssetMeta struct {
 	ImgDesc    []string   `json:"img_desc"`
 	AssetUrl   []string   `json:"asset_url"`
 	AssetExt   string     `json:"asset_ext"`
+	Price      int64      `json:"price"`
 	Amount     int        `json:"amount"`
 	Status     int        `json:"status"`
 	CreateAddr string     `json:"create_addr"`
@@ -277,6 +285,7 @@ type QueryAssetMeta struct {
 type GrantAssetParam struct {
 	AssetId  int64         `json:"asset_id"`
 	ShardId  int64         `json:"shard_id"`
+	Price    int64         `json:"price,omitempty"`
 	Account  *auth.Account `json:"account"`
 	Addr     string        `json:"addr"`
 	ToAddr   string        `json:"to_addr"`
@@ -288,6 +297,9 @@ func (p *GrantAssetParam) Valid() error {
 		return ErrNilPointer
 	}
 	if err := AssetIdValid(p.AssetId); err != nil {
+		return err
+	}
+	if err := PriceInvalid(p.Price); err != nil {
 		return err
 	}
 	if err := AccountValid(p.Account); err != nil {
@@ -335,6 +347,7 @@ type QueryShardResp struct {
 type QueryShardMeta struct {
 	AssetId   int64           `json:"asset_id"`
 	ShardId   int64           `json:"shard_id"`
+	Price     int64           `json:"price"`
 	OwnerAddr string          `json:"owner_addr"`
 	Status    int             `json:"status"`
 	TxId      string          `json:"tx_id"`
@@ -383,6 +396,27 @@ type ListPageResp struct {
 	TotalCnt int         `json:"total_cnt"`
 }
 
+///////// List Asset By Address //////////
+type ListAssetsByAddrParam struct {
+	Addr   string `json:"addr"`
+	Status int    `json:"status"`
+	Page   int    `json:"page"`
+	Limit  int    `json:"limit"`
+}
+
+func (t *ListAssetsByAddrParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := AddrValid(t.Addr); err != nil {
+		return err
+	}
+	if err := StatusValid(t.Status); err != nil {
+		return err
+	}
+	return nil
+}
+
 ///////////// Get Evidence Info /////////////
 type GetEvidenceInfoParam struct {
 	AssetId int64 `json:"asset_id"`
@@ -422,6 +456,7 @@ type HoraeAssetObject struct {
 type TransferAssetParam struct {
 	AssetId  int64         `json:"asset_id"`
 	ShardId  int64         `json:"shard_id"`
+	Price    int64         `json:"price,omitempty"`
 	Account  *auth.Account `json:"account"`
 	Addr     string        `json:"addr"`
 	ToAddr   string        `json:"to_addr"`
@@ -436,6 +471,9 @@ func (p *TransferAssetParam) Valid() error {
 		return err
 	}
 	if err := ShardIdValid(p.ShardId); err != nil {
+		return err
+	}
+	if err := PriceInvalid(p.Price); err != nil {
 		return err
 	}
 	if err := AccountValid(p.Account); err != nil {

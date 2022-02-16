@@ -69,6 +69,7 @@ var (
 	ErrAddressInvalid    = errors.New("address invalid, empty string")
 	ErrUserIdInvalid     = errors.New("user id invalid, must be a positive integer")
 	ErrAmountInvalid     = errors.New("amount invalid, must be a positive integer or a zero value")
+	ErrPriceInvalid      = errors.New("price invalid, must be a positive integer or a zero value")
 	ErrNilPointer        = errors.New("target paramater valid, nil pointer")
 	ErrDescInvalid       = errors.New("target paramater invalid, empty string")
 	ErrAssetTypeInvalid  = errors.New("type invalid, must between 1 to 4")
@@ -78,6 +79,7 @@ var (
 	ErrImgInvalid        = errors.New("imgs invalid")
 	ErrEvidenceInvalid   = errors.New("evidence type invalid, must between 0 to 1")
 	ErrBytesInvalid      = errors.New("bytes invalid, nil pointer")
+	ErrStatusInvalid     = errors.New("status invalid")
 )
 
 type ThumbMap struct {
@@ -136,6 +138,13 @@ func IdValid(id int64) error {
 	return nil
 }
 
+func PriceInvalid(price int64) error {
+	if price < 0 {
+		return ErrPriceInvalid
+	}
+	return nil
+}
+
 func AmountInvalid(amount int) error {
 	if amount < 0 {
 		return ErrAmountInvalid
@@ -188,6 +197,13 @@ func FileValid(files []string) error {
 func ShardIdValid(id int64) error {
 	if id <= 0 {
 		return ErrShardInvalid
+	}
+	return nil
+}
+
+func StatusValid(status int) error {
+	if status <= 0 {
+		return ErrStatusInvalid
 	}
 	return nil
 }
