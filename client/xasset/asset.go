@@ -643,6 +643,50 @@ func (t *AssetOper) ListAssetsByAddr(param *xbase.ListAssetsByAddrParam) (*xbase
 	return &resp, res, nil
 }
 
+func (t *AssetOper) genListShardsByAssetBody(param *xbase.ListShardsByAssetParam) (string, error) {
+	v := url.Values{}
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("cursor", param.Cursor)
+	v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) ListShardsByAsset(param *xbase.ListShardsByAssetParam) (*xbase.ListCursorResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, _ := t.genListShardsByAssetBody(param)
+
+	res, err := t.Post(xbase.AssetListShardsByAsset, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.ListCursorResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [cursor: %s] [has_more: %d] [url: %s] [request_id: %s] [trace_id: %s]", resp.Cursor, resp.HasMore,
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
 // GenEvidenceBody uses the general parameter for getting shard as follows,
 //    {
 // 		   AssetId  int64  `json:"asset_id"`

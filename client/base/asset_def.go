@@ -14,6 +14,7 @@ const (
 	AssetApiQueryShard       = "/xasset/horae/v1/querysds"
 	AssetApiListShardsByAddr = "/xasset/horae/v1/listsdsbyaddr"
 	AssetApiListAssetByAddr  = "/xasset/horae/v1/listastbyaddr"
+	AssetListShardsByAsset   = "/xasset/horae/v1/listsdsbyast"
 	AssetApiGetEvidenceInfo  = "/xasset/horae/v1/getevidenceinfo"
 	FileApiGetStoken         = "/xasset/file/v1/getstoken"
 )
@@ -412,6 +413,23 @@ func (t *ListAssetsByAddrParam) Valid() error {
 		return err
 	}
 	if err := StatusValid(t.Status); err != nil {
+		return err
+	}
+	return nil
+}
+
+///////// List Asset By Address //////////
+type ListShardsByAssetParam struct {
+	AssetId int64  `json:"asset_id"`
+	Cursor  string `json:"cursor"`
+	Limit   int    `json:"limit"`
+}
+
+func (t *ListShardsByAssetParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := AssetIdValid(t.AssetId); err != nil {
 		return err
 	}
 	return nil
