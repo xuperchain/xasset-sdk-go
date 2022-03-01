@@ -5,18 +5,21 @@ import (
 )
 
 const (
-	AssetApiCreate           = "/xasset/horae/v1/create"
-	AssetApiAlter            = "/xasset/horae/v1/alter"
-	AssetApiPublish          = "/xasset/horae/v1/publish"
-	AssetApiQueryAsset       = "/xasset/horae/v1/query"
-	AssetApiGrant            = "/xasset/horae/v1/grant"
-	AssetApiTransfer         = "/xasset/damocles/v1/transfer"
-	AssetApiQueryShard       = "/xasset/horae/v1/querysds"
-	AssetApiListShardsByAddr = "/xasset/horae/v1/listsdsbyaddr"
-	AssetApiListAssetByAddr  = "/xasset/horae/v1/listastbyaddr"
-	AssetListShardsByAsset   = "/xasset/horae/v1/listsdsbyast"
-	AssetApiGetEvidenceInfo  = "/xasset/horae/v1/getevidenceinfo"
-	FileApiGetStoken         = "/xasset/file/v1/getstoken"
+	AssetApiCreate              = "/xasset/horae/v1/create"
+	AssetApiAlter               = "/xasset/horae/v1/alter"
+	AssetApiPublish             = "/xasset/horae/v1/publish"
+	AssetApiQueryAsset          = "/xasset/horae/v1/query"
+	AssetApiGrant               = "/xasset/horae/v1/grant"
+	AssetApiFreeze              = "/xasset/horae/v1/freeze"
+	AssetApiConsume             = "/xasset/horae/v1/consume"
+	AssetApiTransfer            = "/xasset/damocles/v1/transfer"
+	AssetApiQueryShard          = "/xasset/horae/v1/querysds"
+	AssetApiListShardsByAddr    = "/xasset/horae/v1/listsdsbyaddr"
+	AssetApiListAssetByAddr     = "/xasset/horae/v1/listastbyaddr"
+	AssetListShardsByAsset      = "/xasset/horae/v1/listsdsbyast"
+	AssetApiGetEvidenceInfo     = "/xasset/horae/v1/getevidenceinfo"
+	AssetApiShardsInCirculation = "/xasset/horae/v1/srdscir"
+	FileApiGetStoken            = "/xasset/file/v1/getstoken"
 )
 
 /////// Gen Token /////////
@@ -504,4 +507,64 @@ func (p *TransferAssetParam) Valid() error {
 		return err
 	}
 	return nil
+}
+
+////////// Freeze Asset ////////////
+type FreezeAssetParam struct {
+	AssetId int64         `json:"asset_id"`
+	Account *auth.Account `json:"account"`
+}
+
+func (t *FreezeAssetParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := AssetIdValid(t.AssetId); err != nil {
+		return err
+	}
+	if err := AccountValid(t.Account); err != nil {
+		return err
+	}
+	return nil
+}
+
+////////// Consume Shard ////////////
+type ConsumeShardParam struct {
+	AssetId int64 `json:"asset_id"`
+	ShardId int64 `json:"shard_id"`
+
+	Nonce int64  `json:"nonce"`
+	UAddr string `json:"user_addr"`
+	USign string `json:"user_sign"`
+	UPKey string `json:"user_pkey"`
+
+	CAccount *auth.Account `json:"create_account"`
+}
+
+func (t *ConsumeShardParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := AssetIdValid(t.AssetId); err != nil {
+		return err
+	}
+	if err := ShardIdValid(t.ShardId); err != nil {
+		return err
+	}
+	if err := IdValid(t.Nonce); err != nil {
+		return err
+	}
+	if err := AccountValid(t.CAccount); err != nil {
+		return err
+	}
+	if err := AddrValid(t.UAddr); err != nil {
+		return err
+	}
+	return nil
+}
+
+////////// shards in circulation ////////////
+type SrdsCirResp struct {
+	BaseResp
+	Amount int `json:"srdscir_amount"`
 }
