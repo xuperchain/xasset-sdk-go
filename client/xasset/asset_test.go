@@ -1,6 +1,7 @@
 package xasset
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -42,7 +43,8 @@ func TestUploadFile(t *testing.T) {
 	if err != nil {
 		return
 	}
-
+	fileHash := auth.HashBySM3(data)
+	fmt.Println("file hash", hex.EncodeToString(fileHash))
 	param := &base.UploadFileParam{
 		Account:  base.TestAccount,
 		FileName: "test_bytes_go.jpg",
@@ -96,7 +98,8 @@ func CreateTestAsset(account *auth.Account, handle *AssetOper, resp interface{})
 				"bos_v1://bucket/object/1000_500",
 			},
 		},
-		Account: account,
+		Account:  account,
+		FileHash: "fb0c373f296e62b5ee4118b76dc3820eb05477dda86703a19392ec581d12fa44",
 	}
 	handle, _ = NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
 	resp, _, err := handle.CreateAsset(&param)
@@ -310,9 +313,9 @@ func EvidenceTestAsset(account *auth.Account, handle *AssetOper, resp interface{
 		return nil, nil, errors.New("transfer error")
 	}
 	param := &base.PublishAssetParam{
-		AssetId:    value.AssetId,
-		Account:    account,
-		IsEvidence: 1,
+		AssetId:      value.AssetId,
+		Account:      account,
+		EvidenceType: base.EvidenceTypeLegal,
 	}
 	_, _, err := handle.PublishAsset(param)
 	// return *CreateAssetResp
@@ -346,11 +349,12 @@ func TestGetEvidence(t *testing.T) {
 		AssetId: assetId,
 		ShardId: shardId,
 	}
-	_, _, err = handle.GetEvidenceInfo(eParam)
+	info, _, err := handle.GetEvidenceInfo(eParam)
 	if err != nil {
-		t.Errorf("create asset error.err:%v", err)
+		t.Errorf("get asset evidence info error.err:%v", err)
 		return
 	}
+	fmt.Printf("evidence info: %v\n", info)
 }
 
 func TransferTestAsset(account *auth.Account, handle *AssetOper, resp interface{}) (*AssetOper, interface{}, error) {
