@@ -8,6 +8,7 @@ import (
 	"github.com/xuperchain/crypto/core/account"
 	"github.com/xuperchain/crypto/core/hash"
 	"github.com/xuperchain/crypto/core/sign"
+	"github.com/xuperchain/crypto/gm/gmsm/sm3"
 )
 
 // xasset签名完整方法
@@ -54,6 +55,11 @@ func XassetVerifyECDSA(jsPubKey, signature string, oriMsg []byte) (bool, error) 
 // 使用SHA256做单次哈希运算
 func HashBySha256(data []byte) []byte {
 	return hash.HashUsingSha256(data)
+}
+
+// 使用SM3（国密）做单次哈希运算
+func HashBySM3(data []byte) []byte {
+	return sm3.Sm3Sum(data)
 }
 
 // 将byte转换为16进制字符串显示

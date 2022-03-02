@@ -34,6 +34,7 @@ func NewCliCommand() (*cobra.Command, error) {
 
 	rootCmd.AddCommand(cmd.GetAccountCmd().GetCmd())
 	rootCmd.AddCommand(cmd.GetSignCmd().GetCmd())
+	rootCmd.AddCommand(cmd.GetHashCmd().GetCmd())
 
 	return rootCmd, nil
 }

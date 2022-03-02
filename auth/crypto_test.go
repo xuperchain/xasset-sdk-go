@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/hex"
 	"fmt"
 	"testing"
 )
@@ -78,4 +79,10 @@ func TestVerifyAddrByPubKey(t *testing.T) {
 
 	res, index := VerifyAddrByPubKey(addr, pk)
 	fmt.Printf("addr:%v result:%v index:%v\n", addr, res, index)
+}
+
+func TestHashBySM3(t *testing.T) {
+	msg := []byte("test")
+	hash := HashBySM3(msg)
+	fmt.Println(hex.EncodeToString(hash))
 }
