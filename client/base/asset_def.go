@@ -129,6 +129,7 @@ type CreateAssetParam struct {
 	AssetInfo *CreateAssetInfo `json:"asset_info"`
 	Account   *auth.Account    `json:"account"`
 	UserId    int64            `json:"user_id,omitempty"`
+	FileHash  string           `json:"file_hash"`
 }
 
 func (t *CreateAssetParam) Valid() error {
@@ -166,6 +167,7 @@ type AlterAssetInfo struct {
 	LongDesc  string    `json:"long_desc,omitempty"`
 	AssetExt  string    `json:"asset_ext,omitempty"`
 	GroupId   int64     `json:"group_id,omitempty"`
+	FileHash  string    `json:"file_hash,omitempty"`
 }
 
 func AlterAssetInfoValid(p *AlterAssetInfo) error {
@@ -197,6 +199,7 @@ type AlterAssetParam struct {
 	Amount    int             `json:"amount,omitempty"`
 	AssetInfo *AlterAssetInfo `json:"asset_info"`
 	Account   *auth.Account   `json:"account"`
+	FileHash  string          `json:"file_hash"`
 }
 
 // AlterAssetParam be valid where has the amount or thr asset info to be altered.
@@ -221,9 +224,9 @@ func (t *AlterAssetParam) Valid() error {
 
 ////////// Publish Asset ////////////
 type PublishAssetParam struct {
-	AssetId    int64         `json:"asset_id"`
-	Account    *auth.Account `json:"account"`
-	IsEvidence int           `json:"is_evidence,omitempty"`
+	AssetId      int64         `json:"asset_id"`
+	Account      *auth.Account `json:"account"`
+	EvidenceType int           `json:"evidence_type,omitempty"`
 }
 
 func (t *PublishAssetParam) Valid() error {
@@ -236,7 +239,7 @@ func (t *PublishAssetParam) Valid() error {
 	if err := AccountValid(t.Account); err != nil {
 		return err
 	}
-	if err := EvidenceValid(t.IsEvidence); err != nil {
+	if err := EvidenceValid(t.EvidenceType); err != nil {
 		return err
 	}
 	return nil

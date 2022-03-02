@@ -182,6 +182,7 @@ func (t *AssetOper) genCreateAssetBody(appid int64, param *xbase.CreateAssetPara
 	if err := xbase.IdValid(param.UserId); err == nil {
 		v.Set("user_id", fmt.Sprintf("%d", param.UserId))
 	}
+	v.Set("file_hash", param.FileHash)
 	body := v.Encode()
 	return body, nil
 }
@@ -249,6 +250,9 @@ func (t *AssetOper) genAlterAssetBody(param *xbase.AlterAssetParam) (string, err
 	v.Set("sign", sign)
 	v.Set("pkey", param.Account.PublicKey)
 	v.Set("nonce", fmt.Sprintf("%d", nonce))
+	if param.FileHash!="" {
+		v.Set("file_hash", param.FileHash)
+	}
 
 	if err := xbase.PriceInvalid(param.Price); err == nil {
 		v.Set("price", fmt.Sprintf("%d", param.Price))
@@ -331,7 +335,7 @@ func (t *AssetOper) genPublishAssetBody(param *xbase.PublishAssetParam) (string,
 	v.Set("sign", sign)
 	v.Set("pkey", param.Account.PublicKey)
 	v.Set("nonce", fmt.Sprintf("%d", nonce))
-	v.Set("is_evidence", fmt.Sprintf("%d", param.IsEvidence))
+	v.Set("evidence_type", fmt.Sprintf("%d", param.EvidenceType))
 	body := v.Encode()
 	return body, nil
 }
@@ -716,7 +720,6 @@ func (t *AssetOper) GetEvidenceInfo(param *xbase.GetEvidenceInfoParam) (*xbase.G
 			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
 		return nil, nil, xbase.ComErrRespCodeErr
 	}
-
 	var resp xbase.GetEvidenceInfoResp
 	err = json.Unmarshal([]byte(res.Body), &resp)
 	if err != nil {

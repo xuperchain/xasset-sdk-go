@@ -64,6 +64,12 @@ const (
 	PayBySpecial = 9
 )
 
+// 存证类型
+const (
+	EvidenceTypeNo    = 0 //不使用存证
+	EvidenceTypeLegal = 1 // 使用司法存证
+)
+
 var (
 	ErrAssetInvalid      = errors.New("asset invalid, must be a positive integer")
 	ErrAddressInvalid    = errors.New("address invalid, empty string")
