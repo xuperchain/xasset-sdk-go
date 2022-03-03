@@ -225,19 +225,6 @@ func TestXasset(t *testing.T) {
 		return
 	}
 
-	// ShardsInCirculation
-	srdsResp, _, err := handle.ShardsInCirculation(&base.QueryAssetParam{
-		AssetId: assetId,
-	})
-	if err != nil {
-		t.Errorf("ShardsInCirculation error. err: %v", err)
-		return
-	}
-	if srdsResp.Amount <= 0 {
-		t.Errorf("srds in circulation error. amount: %v", srdsResp.Amount)
-		return
-	}
-
 	// check shard onChain status
 	transferDone := ChainReady(checkShardOnChain)
 	<-transferDone
@@ -276,19 +263,6 @@ func TestXasset(t *testing.T) {
 	_, _, err = handle.FreezeAsset(freezeParam)
 	if err != nil {
 		t.Errorf("freeze shard error. err: %v", err)
-		return
-	}
-
-	// ShardsInCirculation
-	srdsResp, _, err = handle.ShardsInCirculation(&base.QueryAssetParam{
-		AssetId: assetId,
-	})
-	if err != nil {
-		t.Errorf("ShardsInCirculation error. err: %v", err)
-		return
-	}
-	if srdsResp.Amount > 0 {
-		t.Errorf("srds in circulation error. amount: %v", srdsResp.Amount)
 		return
 	}
 

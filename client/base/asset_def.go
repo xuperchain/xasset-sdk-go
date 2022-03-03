@@ -18,7 +18,6 @@ const (
 	AssetApiListAssetByAddr     = "/xasset/horae/v1/listastbyaddr"
 	AssetListShardsByAsset      = "/xasset/horae/v1/listsdsbyast"
 	AssetApiGetEvidenceInfo     = "/xasset/horae/v1/getevidenceinfo"
-	AssetApiShardsInCirculation = "/xasset/horae/v1/srdscir"
 	FileApiGetStoken            = "/xasset/file/v1/getstoken"
 )
 
@@ -561,10 +560,4 @@ func (t *ConsumeShardParam) Valid() error {
 		return err
 	}
 	return nil
-}
-
-////////// shards in circulation ////////////
-type SrdsCirResp struct {
-	BaseResp
-	Amount int `json:"srdscir_amount"`
 }

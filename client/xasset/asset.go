@@ -928,39 +928,3 @@ func (t *AssetOper) ConsumeShard(param *xbase.ConsumeShardParam) (*xbase.BaseRes
 	return &resp, res, nil
 }
 
-func (t *AssetOper) ShardsInCirculation(param *xbase.QueryAssetParam) (*xbase.SrdsCirResp, *xbase.RequestRes, error) {
-	if err := param.Valid(); err != nil {
-		return nil, nil, err
-	}
-	v := url.Values{}
-	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
-	body := v.Encode()
-
-	res, err := t.Post(xbase.AssetApiShardsInCirculation, body)
-	if err != nil {
-		t.Logger.Warn("post request xasset failed. err: %v", err)
-		return nil, nil, xbase.ComErrRequsetFailed
-	}
-	if res.HttpCode != 200 {
-		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, nil, xbase.ComErrRespCodeErr
-	}
-
-	var resp xbase.SrdsCirResp
-	err = json.Unmarshal([]byte(res.Body), &resp)
-	if err != nil {
-		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, res, xbase.ComErrUnmarshalBodyFailed
-	}
-	if resp.Errno != xbase.XassetErrNoSucc {
-		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
-			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
-		return nil, res, xbase.ComErrServRespErrnoErr
-	}
-
-	t.Logger.Trace("operate succ. [asset_id: %d] [srdscir_amount: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
-		param.AssetId, resp.Amount, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
-	return &resp, res, nil
-}
