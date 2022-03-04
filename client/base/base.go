@@ -202,7 +202,7 @@ func ShardIdValid(id int64) error {
 }
 
 func StatusValid(status int) error {
-	if status <= 0 {
+	if status < 0 {
 		return ErrStatusInvalid
 	}
 	return nil

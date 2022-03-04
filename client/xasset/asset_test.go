@@ -1,7 +1,6 @@
 package xasset
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -9,6 +8,14 @@ import (
 
 	"github.com/xuperchain/xasset-sdk-go/auth"
 	"github.com/xuperchain/xasset-sdk-go/client/base"
+	"github.com/xuperchain/xasset-sdk-go/utils"
+)
+
+var (
+	handle   *AssetOper
+	sleepT   = time.Second * 30
+	AccountA = base.TestAccount
+	AccountB = base.TestTransAccount
 )
 
 func TestGetStoken(t *testing.T) {
@@ -60,25 +67,23 @@ func TestUploadFile(t *testing.T) {
 	fmt.Println(res, resp)
 }
 
-type ProcedureFunc func(account *auth.Account, handle *AssetOper, resp interface{}) (*AssetOper, interface{}, error)
-
-func BridgeTest(account *auth.Account, handle *AssetOper, resp interface{}, procedures ...ProcedureFunc) (*AssetOper, interface{}, error) {
-	procedureA := procedures[0]
-	handle, resp, err := procedureA(account, handle, resp)
-	if err != nil {
-		return nil, resp, err
-	}
-	procedureB := procedures[1:]
-	for _, procedure := range procedureB {
-		_, resp, err = procedure(account, handle, resp)
-		if err != nil {
-			return nil, resp, err
+func ChainReady(checkFunc func(...interface{}) error) <-chan interface{} {
+	heartbeat := make(chan interface{}, 1)
+	go func() {
+		defer close(heartbeat)
+		for {
+			if err := checkFunc(); err == nil {
+				heartbeat <- struct{}{}
+				return
+			}
+			time.Sleep(sleepT)
 		}
-	}
-	return handle, resp, nil
+	}()
+
+	return heartbeat
 }
 
-func CreateTestAsset(account *auth.Account, handle *AssetOper, resp interface{}) (*AssetOper, interface{}, error) {
+func CreatetAnAsset(account *auth.Account) (int64, error) {
 	param := base.CreateAssetParam{
 		Price:  10010,
 		Amount: 100,
@@ -98,177 +103,184 @@ func CreateTestAsset(account *auth.Account, handle *AssetOper, resp interface{})
 		},
 		Account: account,
 	}
-	handle, _ = NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
-	resp, _, err := handle.CreateAsset(&param)
-	return handle, resp, err
+	h, _ := NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
+	if handle == nil {
+		handle = h
+	}
+
+	resp, _, err := h.CreateAsset(&param)
+	if err != nil {
+		return 0, err
+	}
+	return resp.AssetId, nil
 }
 
-func TestCreateAsset(t *testing.T) {
-	_, _, err := CreateTestAsset(base.TestAccount, nil, nil)
+func checkAssetDone(assetId int64, status int) error {
+	qResp, _, err := handle.QueryAsset(&base.QueryAssetParam{
+		AssetId: assetId,
+	})
 	if err != nil {
-		t.Errorf("create asset error. err: %v", err)
-		return
+		return err
 	}
+	if qResp.Meta.Status != status {
+		return fmt.Errorf("oops, asset status: %d, want: %d", qResp.Meta.Status, status)
+	}
+	return nil
+}
+
+func checkShardDone(assetId int64, shardId int64, status int) error {
+	qResp, _, err := handle.QueryShard(&base.QueryShardParam{
+		AssetId: assetId,
+		ShardId: shardId,
+	})
+	if err != nil {
+		return err
+	}
+	if qResp.Meta.Status != status {
+		return fmt.Errorf("oops, shard status: %d, want: %d", qResp.Meta.Status, status)
+	}
+	return nil
 }
 
 func TestAlterAsset(t *testing.T) {
-	handle, resp, err := CreateTestAsset(base.TestAccount, nil, nil)
+	assetId, err := CreatetAnAsset(AccountA)
 	if err != nil {
 		t.Errorf("CreateAsset error, err: %v", err)
-		return
-	}
-	value, ok := resp.(*base.CreateAssetResp)
-	if !ok {
-		t.Errorf("transfer to createResp error.")
 		return
 	}
 	param := base.AlterAssetParam{
 		Price:   10011,
 		Amount:  200,
-		AssetId: value.AssetId,
-		Account: base.TestAccount,
+		AssetId: assetId,
+		Account: AccountA,
 	}
 	_, _, err = handle.AlterAsset(&param)
 	if err != nil {
-		t.Errorf("alter asset error, err: %v, asset_id: %d", err, value.AssetId)
+		t.Errorf("alter asset error, err: %v, asset_id: %d", err, assetId)
 		return
 	}
 }
 
-func PublishTestAsset(account *auth.Account, handle *AssetOper, resp interface{}) (*AssetOper, interface{}, error) {
-	value, ok := resp.(*base.CreateAssetResp)
-	if !ok {
-		return nil, nil, errors.New("transfer error")
-	}
-	param := &base.PublishAssetParam{
-		AssetId: value.AssetId,
-		Account: account,
-	}
-	_, _, err := handle.PublishAsset(param)
-	// return *CreateAssetResp
-	return handle, resp, err
-}
-
-func TestPublishAsset(t *testing.T) {
-	if _, _, err := BridgeTest(base.TestAccount, nil, nil, CreateTestAsset, PublishTestAsset); err != nil {
-		t.Errorf("publish asset error. err: %v", err)
-	}
-}
-
-func TestQueryAsset(t *testing.T) {
-	handle, resp, err := CreateTestAsset(base.TestAccount, nil, nil)
+func TestXasset(t *testing.T) {
+	// Create Asset
+	assetId, err := CreatetAnAsset(AccountA)
 	if err != nil {
 		t.Errorf("CreateAsset error, err: %v", err)
 		return
 	}
-	value, ok := resp.(*base.CreateAssetResp)
-	if !ok {
-		t.Errorf("transfer to createResp error.")
-		return
+	param := &base.PublishAssetParam{
+		AssetId:    assetId,
+		Account:    AccountA,
+		IsEvidence: 1,
 	}
-	param := &base.QueryAssetParam{
-		AssetId: value.AssetId,
-	}
-	resp, _, err = handle.QueryAsset(param)
-	if err != nil {
-		t.Errorf("query asset error. err: %v", err)
-		return
-	}
-	t.Logf("Query Asset, asset_id: %d, resp: %+v", value.AssetId, resp)
-}
 
-func GrantTestAsset(account *auth.Account, handle *AssetOper, resp interface{}) (*AssetOper, interface{}, error) {
-	value, ok := resp.(*base.CreateAssetResp)
-	if !ok {
-		return nil, nil, errors.New("transfer error")
+	// Publish Asset
+	_, _, err = handle.PublishAsset(param)
+	if err != nil {
+		t.Errorf("PublishAsset error, err: %v", err)
+		return
 	}
-	param := &base.GrantAssetParam{
-		AssetId: value.AssetId,
+
+	// check onChain status
+	checkPublishFunc := func(...interface{}) error {
+		return checkAssetDone(assetId, 4)
+	}
+	done := ChainReady(checkPublishFunc)
+	<-done
+
+	// Grant Shard
+	grantParam := &base.GrantAssetParam{
+		AssetId: assetId,
 		Price:   10012,
-		Account: account,
-		Addr:    account.Address,
-		ToAddr:  base.TestTransAccount.Address,
+		Account: AccountA,
+		Addr:    AccountA.Address,
+		ToAddr:  AccountB.Address,
 	}
-	nResp, _, err := handle.GrantAsset(param)
+	grantResp, _, err := handle.GrantAsset(grantParam)
 	if err != nil {
-		q := &base.QueryAssetParam{
-			AssetId: value.AssetId,
-		}
-		qRes, _, _ := handle.QueryAsset(q)
-		return nil, qRes.Meta.Status, err
+		t.Errorf("GrantAsset error, err: %v", err)
+		return
 	}
-	return handle, nResp, err
-}
+	shardId := grantResp.ShardId
 
-// TestGrantNTransAsset use -timeout=500s when executing go test
-func TestGrantNTransAsset(t *testing.T) {
-	// do CreateAsset & PublishAsset
-	handle, resp, err := BridgeTest(base.TestAccount, nil, nil, CreateTestAsset, PublishTestAsset)
+	// check shard onChain status
+	checkShardOnChain := func(...interface{}) error {
+		return checkShardDone(assetId, shardId, 0)
+	}
+	grantDone := ChainReady(checkShardOnChain)
+	<-grantDone
+
+	// Transfer Shard
+	transParam := &base.TransferAssetParam{
+		AssetId: assetId,
+		ShardId: shardId,
+		Price:   10013,
+		Account: AccountB,
+		Addr:    AccountB.Address,
+		ToAddr:  AccountA.Address,
+	}
+	_, _, err = handle.TransferAsset(transParam)
 	if err != nil {
-		t.Errorf("publish asset error. err: %v", err)
+		t.Errorf("TransferAsset error, err: %v", err)
 		return
 	}
 
-	// waiting for data be send to the chain
-	waitT := time.Duration(30)
-	time.Sleep(waitT * time.Second)
-	// do GrantAsset
-	BridgeTest(base.TestAccount, handle, resp, GrantTestAsset)
+	// check shard onChain status
+	transferDone := ChainReady(checkShardOnChain)
+	<-transferDone
 
-	handle, resp, err = BridgeTest(base.TestAccount, handle, resp, GrantTestAsset)
+	// Consume Shard
+	nonce := utils.GenNonce()
+	signMsg := fmt.Sprintf("%d%d", assetId, nonce)
+	sign, _ := auth.XassetSignECDSA(AccountA.PrivateKey, []byte(signMsg))
+	consumeParam := &base.ConsumeShardParam{
+		AssetId:  assetId,
+		ShardId:  shardId,
+		Nonce:    nonce,
+		UAddr:    AccountA.Address,
+		USign:    sign,
+		UPKey:    AccountA.PublicKey,
+		CAccount: AccountA,
+	}
+	_, _, err = handle.ConsumeShard(consumeParam)
 	if err != nil {
-		t.Errorf("grant asset error. err: %v, status: %d", err, resp.(int))
+		t.Errorf("consume shard error. err: %v", err)
 		return
 	}
-	// get asset_id
-	value := resp.(*base.GrantAssetResp)
-	assetId := value.AssetId
-	shardId := value.ShardId
 
-	time.Sleep(waitT * time.Second)
-	// do TransferAsset
-	handle, _, err = BridgeTest(base.TestTransAccount, handle, resp, TransferTestAsset)
+	// check shard consume status
+	checkShardConsume := func(...interface{}) error {
+		return checkShardDone(assetId, shardId, 6)
+	}
+	consumeDone := ChainReady(checkShardConsume)
+	<-consumeDone
+
+	// Freeze Asset
+	freezeParam := &base.FreezeAssetParam{
+		AssetId: assetId,
+		Account: AccountA,
+	}
+	_, _, err = handle.FreezeAsset(freezeParam)
 	if err != nil {
-		t.Errorf("transfer asset error. err: %v", err)
+		t.Errorf("freeze shard error. err: %v", err)
 		return
 	}
 
-	time.Sleep(waitT * time.Second)
-	// do QueryShardAsset
-	srdP := &base.QueryShardParam{
+	// GetEvidenceInfo
+	evidenceParam := &base.GetEvidenceInfoParam{
 		AssetId: assetId,
 		ShardId: shardId,
 	}
-	nResp, _, err := handle.QueryShard(srdP)
+	_, _, err = handle.GetEvidenceInfo(evidenceParam)
 	if err != nil {
-		t.Errorf("query shard error. err: %v", err)
+		t.Errorf("GetEvidenceInfo error.err:%v", err)
 		return
 	}
-	if nResp.Meta.OwnerAddr != base.TestAccount.Address {
-		t.Errorf("query shard error. owner: %s", nResp.Meta.OwnerAddr)
-	}
-	t.Logf("Query Asset, asset_id: %d, shard_id: %d, resp: %+v", assetId, shardId, nResp)
-
-	param := &base.ListShardsByAssetParam{
-		AssetId: assetId,
-		Limit:   1,
-	}
-	lResp, _, err := handle.ListShardsByAsset(param)
-	if err != nil {
-		t.Errorf("list asset error. err: %v", err)
-		return
-	}
-	if err != nil {
-		t.Error("read asset error")
-		return
-	}
-	t.Logf("Query srds by asset, param: %+v, resp: %+v", param, lResp)
 }
 
 func TestListShardsByAddr(t *testing.T) {
-	handle, _ := NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
 	param := &base.ListShardsByAddrParam{
-		Addr:  base.TestAccount.Address,
+		Addr:  AccountA.Address,
 		Page:  1,
 		Limit: 20,
 	}
@@ -285,10 +297,9 @@ func TestListShardsByAddr(t *testing.T) {
 }
 
 func TestListAssetByAddr(t *testing.T) {
-	handle, _ := NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
 	param := &base.ListAssetsByAddrParam{
-		Addr:   base.TestAccount.Address,
-		Status: 4,
+		Addr:   AccountA.Address,
+		Status: 1,
 		Page:   1,
 		Limit:  20,
 	}
@@ -302,70 +313,4 @@ func TestListAssetByAddr(t *testing.T) {
 		return
 	}
 	t.Logf("Query ast, param: %+v, resp: %+v", param, lResp)
-}
-
-func EvidenceTestAsset(account *auth.Account, handle *AssetOper, resp interface{}) (*AssetOper, interface{}, error) {
-	value, ok := resp.(*base.CreateAssetResp)
-	if !ok {
-		return nil, nil, errors.New("transfer error")
-	}
-	param := &base.PublishAssetParam{
-		AssetId:    value.AssetId,
-		Account:    account,
-		IsEvidence: 1,
-	}
-	_, _, err := handle.PublishAsset(param)
-	// return *CreateAssetResp
-	return handle, resp, err
-}
-
-func TestGetEvidence(t *testing.T) {
-	// do CreateAsset & PublishAsset
-	handle, resp, err := BridgeTest(base.TestAccount, nil, nil, CreateTestAsset, EvidenceTestAsset)
-	if err != nil {
-		t.Errorf("publish asset error. err: %v", err)
-		return
-	}
-
-	// waiting for data be send to the chain
-	waitT := time.Duration(60)
-	time.Sleep(waitT * time.Second)
-	// do GrantAsset
-	handle, resp, err = BridgeTest(base.TestAccount, handle, resp, GrantTestAsset)
-	if err != nil {
-		t.Errorf("grant asset error. err: %v, status: %d", err, resp.(int))
-		return
-	}
-
-	time.Sleep(waitT * time.Second)
-	// get asset_id
-	value := resp.(*base.GrantAssetResp)
-	assetId := value.AssetId
-	shardId := value.ShardId
-	eParam := &base.GetEvidenceInfoParam{
-		AssetId: assetId,
-		ShardId: shardId,
-	}
-	_, _, err = handle.GetEvidenceInfo(eParam)
-	if err != nil {
-		t.Errorf("create asset error.err:%v", err)
-		return
-	}
-}
-
-func TransferTestAsset(account *auth.Account, handle *AssetOper, resp interface{}) (*AssetOper, interface{}, error) {
-	value, ok := resp.(*base.GrantAssetResp)
-	if !ok {
-		return nil, nil, errors.New("transfer error")
-	}
-	param := &base.TransferAssetParam{
-		AssetId: value.AssetId,
-		ShardId: value.ShardId,
-		Price:   10013,
-		Account: account,
-		Addr:    account.Address,
-		ToAddr:  base.TestAccount.Address,
-	}
-	nResp, _, err := handle.TransferAsset(param)
-	return handle, nResp, err
 }
