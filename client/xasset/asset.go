@@ -928,3 +928,36 @@ func (t *AssetOper) ConsumeShard(param *xbase.ConsumeShardParam) (*xbase.BaseRes
 	return &resp, res, nil
 }
 
+func (t *AssetOper) ListAssetHistory(param *xbase.ListAssetHisParam) (*xbase.ListAssetHistoryResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+
+	v := url.Values{}
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("page", fmt.Sprintf("%d", param.Page))
+	v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	body := v.Encode()
+
+	res, err := t.Post(xbase.ListAssetHistory, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.ListAssetHistory, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.ListAssetHistoryResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrUnmarshalBodyFailed
+	}
+	t.Logger.Trace("operate succ. [asset_id: %d] [url: %s] [request_id: %s] [trace_id: %s] [resp: %+v]",
+		param.AssetId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header), resp)
+	return &resp, res, nil
+}
