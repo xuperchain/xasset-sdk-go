@@ -276,6 +276,18 @@ func TestXasset(t *testing.T) {
 		t.Errorf("GetEvidenceInfo error.err:%v", err)
 		return
 	}
+
+	// ListAssetHistory
+	listAstHisParam := &base.ListAssetHisParam{
+		AssetId: assetId,
+		Page:    1,
+		Limit:   5,
+	}
+	_, _, err = handle.ListAssetHistory(listAstHisParam)
+	if err != nil {
+		t.Errorf("ListAssetHistory error.err:%v", err)
+		return
+	}
 }
 
 func TestListShardsByAddr(t *testing.T) {

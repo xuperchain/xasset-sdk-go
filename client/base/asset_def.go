@@ -5,20 +5,21 @@ import (
 )
 
 const (
-	AssetApiCreate              = "/xasset/horae/v1/create"
-	AssetApiAlter               = "/xasset/horae/v1/alter"
-	AssetApiPublish             = "/xasset/horae/v1/publish"
-	AssetApiQueryAsset          = "/xasset/horae/v1/query"
-	AssetApiGrant               = "/xasset/horae/v1/grant"
-	AssetApiFreeze              = "/xasset/horae/v1/freeze"
-	AssetApiConsume             = "/xasset/horae/v1/consume"
-	AssetApiTransfer            = "/xasset/damocles/v1/transfer"
-	AssetApiQueryShard          = "/xasset/horae/v1/querysds"
-	AssetApiListShardsByAddr    = "/xasset/horae/v1/listsdsbyaddr"
-	AssetApiListAssetByAddr     = "/xasset/horae/v1/listastbyaddr"
-	AssetListShardsByAsset      = "/xasset/horae/v1/listsdsbyast"
-	AssetApiGetEvidenceInfo     = "/xasset/horae/v1/getevidenceinfo"
-	FileApiGetStoken            = "/xasset/file/v1/getstoken"
+	AssetApiCreate           = "/xasset/horae/v1/create"
+	AssetApiAlter            = "/xasset/horae/v1/alter"
+	AssetApiPublish          = "/xasset/horae/v1/publish"
+	AssetApiQueryAsset       = "/xasset/horae/v1/query"
+	AssetApiGrant            = "/xasset/horae/v1/grant"
+	AssetApiFreeze           = "/xasset/horae/v1/freeze"
+	AssetApiConsume          = "/xasset/horae/v1/consume"
+	AssetApiTransfer         = "/xasset/damocles/v1/transfer"
+	AssetApiQueryShard       = "/xasset/horae/v1/querysds"
+	AssetApiListShardsByAddr = "/xasset/horae/v1/listsdsbyaddr"
+	AssetApiListAssetByAddr  = "/xasset/horae/v1/listastbyaddr"
+	AssetListShardsByAsset   = "/xasset/horae/v1/listsdsbyast"
+	AssetApiGetEvidenceInfo  = "/xasset/horae/v1/getevidenceinfo"
+	FileApiGetStoken         = "/xasset/file/v1/getstoken"
+	ListAssetHistory         = "/xasset/horae/v1/history"
 )
 
 /////// Gen Token /////////
@@ -560,4 +561,31 @@ func (t *ConsumeShardParam) Valid() error {
 		return err
 	}
 	return nil
+}
+
+type ListAssetHisParam struct {
+	AssetId int64 `json:"asset_id"`
+	Page    int   `json:"page"`
+	Limit   int   `json:"limit"`
+}
+
+func (t *ListAssetHisParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := AssetIdValid(t.AssetId); err != nil {
+		return err
+	}
+	if err := IdValid(int64(t.Page)); err != nil {
+		return err
+	}
+	return nil
+}
+
+type ListAssetHistoryResp struct {
+	BaseResp
+	List     interface{} `json:"list"`
+	TotalCnt int         `json:"total_cnt"`
+	Cursor   string      `json:"cursor"`
+	HasMore  int         `json:"has_more"`
 }
