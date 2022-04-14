@@ -355,7 +355,6 @@ type QueryShardMeta struct {
 	ShardId   int64           `json:"shard_id"`
 	Price     int64           `json:"price"`
 	OwnerAddr string          `json:"owner_addr"`
-	OwnerUid  int64           `json:"owner_uid"`
 	Status    int             `json:"status"`
 	TxId      string          `json:"tx_id"`
 	AssetInfo *ShardAssetInfo `json:"asset_info"`
@@ -368,6 +367,7 @@ type ShardAssetInfo struct {
 	Thumb      []ThumbMap `json:"thumb"`
 	ShortDesc  string     `json:"short_desc"`
 	CreateAddr string     `json:"create_addr"`
+	GroupId    int64      `json:"group_id"`
 }
 
 ///////// List Shard By Address //////////
