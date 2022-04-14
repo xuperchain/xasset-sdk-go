@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"os"
 	"path"
 	"runtime"
 	"strconv"
@@ -36,7 +37,7 @@ func GenAssetId(appId int64) int64 {
 func GenNonce() int64 {
 	randId1 := GenRandId()
 	randId2 := GenRandId()
-	content := fmt.Sprintf("%d#%d#%d", randId1, randId2, time.Now().UnixNano())
+	content := fmt.Sprintf("%d#%d#%d#%s", randId1, randId2, time.Now().UnixNano(), GetHostName())
 	sign := StrSignToInt(content)
 	return int64(sign & 0x7FFFFFFFFFFFFFFF)
 }
@@ -99,4 +100,13 @@ func StrSignToInt(content string) uint64 {
 	sign = (sign1 & 0x00000000ffffffff) | (sign2 << 32)
 
 	return sign
+}
+
+func GetHostName() string {
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "127.0.0.1"
+	}
+
+	return hostname
 }
