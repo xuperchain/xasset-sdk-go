@@ -17,9 +17,7 @@ const (
 
 var TestAccount, _ = auth.NewXchainEcdsaAccount(auth.MnemStrgthStrong, auth.MnemLangCN)
 
-
 var TestTransAccount, _ = auth.NewXchainEcdsaAccount(auth.MnemStrgthStrong, auth.MnemLangCN)
-
 
 func TestGetXassetConfig() *config.XassetCliConfig {
 	cfg := config.NewXassetCliConf()

@@ -29,7 +29,7 @@ func NewAssetOperCli(cfg *config.XassetCliConfig, logger logs.LogDriver) (*Asset
 	return obj, nil
 }
 
-// genGetStokenBody Grant uses the general parameter for getting stoken as follows,
+// genGetStokenBody Grant uses the general parameter as follows,
 //    {
 // 		   Addr     string `json:"addr"`
 // 		   Sign     string `json:"sign"`
@@ -156,6 +156,7 @@ func (t *AssetOper) UploadFile(param *xbase.UploadFileParam) (*xbase.UploadFileR
 // 		PKey      string `json:"pkey"`
 // 		Nonce     int64  `json:"nonce"`
 // 		UserId    int64  `json:"user_id,omitempty"`
+//		FileHash  string `json:"file_hash,omitempty"`
 // }
 func (t *AssetOper) genCreateAssetBody(appid int64, param *xbase.CreateAssetParam) (string, error) {
 	nonce := utils.GenNonce()
@@ -181,6 +182,9 @@ func (t *AssetOper) genCreateAssetBody(appid int64, param *xbase.CreateAssetPara
 	v.Set("nonce", fmt.Sprintf("%d", nonce))
 	if err := xbase.IdValid(param.UserId); err == nil {
 		v.Set("user_id", fmt.Sprintf("%d", param.UserId))
+	}
+	if param.FileHash != "" {
+		v.Set("file_hash", param.FileHash)
 	}
 	body := v.Encode()
 	return body, nil
@@ -234,6 +238,7 @@ func (t *AssetOper) CreateAsset(param *xbase.CreateAssetParam) (*xbase.CreateAss
 // 		Nonce     int64  `json:"nonce"`
 // 		Amount    int    `json:"amount"`
 // 		AssetInfo string `json:"asset_info"`
+// 		FileHash  string `json:"file_hash"`
 // }
 func (t *AssetOper) genAlterAssetBody(param *xbase.AlterAssetParam) (string, error) {
 	nonce := utils.GenNonce()
@@ -262,6 +267,9 @@ func (t *AssetOper) genAlterAssetBody(param *xbase.AlterAssetParam) (string, err
 			return "", xbase.ComErrJsonMarFailed
 		}
 		v.Set("asset_info", string(assetInfo))
+	}
+	if param.FileHash != "" {
+		v.Set("file_hash", param.FileHash)
 	}
 	body := v.Encode()
 	return body, nil
@@ -374,7 +382,7 @@ func (t *AssetOper) PublishAsset(param *xbase.PublishAssetParam) (*xbase.BaseRes
 	return &resp, res, nil
 }
 
-// GenAlterAssetBody uses the parameter as follows,
+// GenQueryAssetBody uses the parameter as follows,
 // {
 //		AssetId int64 `json:"asset_id"`
 // }
@@ -420,7 +428,59 @@ func (t *AssetOper) QueryAsset(param *xbase.QueryAssetParam) (*xbase.QueryAssetR
 	return &resp, res, nil
 }
 
-// GenGrantAssetBody Grant uses the general parameter for granting as follows,
+// GenListAssetsByAddrBody uses the general parameter as follows,
+//    {
+//		   Addr   string `json:"addr"`
+//		   Page   int    `json:"page"`
+//		   Limit  int    `json:"limit"`
+//		   Status int	 `json:"status"`
+// 	  }
+func (t *AssetOper) genListAssetByAddrBody(param *xbase.ListAssetsByAddrParam) (string, error) {
+	v := url.Values{}
+	v.Set("addr", param.Addr)
+	v.Set("status", fmt.Sprintf("%d", param.Status))
+	v.Set("page", fmt.Sprintf("%d", param.Page))
+	v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) ListAssetsByAddr(param *xbase.ListAssetsByAddrParam) (*xbase.ListAssetsByAddrResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, _ := t.genListAssetByAddrBody(param)
+
+	res, err := t.Post(xbase.AssetApiListAssetByAddr, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.ListAssetsByAddrResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [total_cnt: %d] [url: %s] [request_id: %s] [trace_id: %s]", resp.TotalCnt,
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// GenGrantAssetBody Grant uses the general parameter as follows,
 //    {
 // 		   AssetId  int64  `json:"asset_id"`
 // 		   ShardId  int64  `json:"shard_id"`
@@ -430,6 +490,7 @@ func (t *AssetOper) QueryAsset(param *xbase.QueryAssetParam) (*xbase.QueryAssetR
 // 		   Nonce    int64  `json:"nonce"`
 // 		   ToAddr   string `json:"to_addr"`
 // 		   ToUserId int64  `json:"to_userid,omitempty"`
+//  	   Price 	int64  `json:"price",omitempty`
 // 	  }
 func (t *AssetOper) genGrantAssetBody(appid int64, param *xbase.GrantAssetParam) (string, error) {
 	nonce := utils.GenNonce()
@@ -500,242 +561,7 @@ func (t *AssetOper) GrantAsset(param *xbase.GrantAssetParam) (*xbase.GrantAssetR
 	return &resp, res, nil
 }
 
-// GenQueryShardsBody uses the general parameter for getting shard as follows,
-//    {
-// 		   AssetId  int64  `json:"asset_id"`
-// 		   ShardId  int64  `json:"shard_id"`
-// 	  }
-func (t *AssetOper) genQueryShardsBody(param *xbase.QueryShardParam) (string, error) {
-	v := url.Values{}
-	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
-	v.Set("shard_id", fmt.Sprintf("%d", param.ShardId))
-	body := v.Encode()
-	return body, nil
-}
-
-func (t *AssetOper) QueryShard(param *xbase.QueryShardParam) (*xbase.QueryShardResp, *xbase.RequestRes, error) {
-	if err := param.Valid(); err != nil {
-		return nil, nil, err
-	}
-	body, _ := t.genQueryShardsBody(param)
-
-	res, err := t.Post(xbase.AssetApiQueryShard, body)
-	if err != nil {
-		t.Logger.Warn("post request xasset failed. err: %v", err)
-		return nil, nil, xbase.ComErrRequsetFailed
-	}
-	if res.HttpCode != 200 {
-		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, nil, xbase.ComErrRespCodeErr
-	}
-
-	var resp xbase.QueryShardResp
-	err = json.Unmarshal([]byte(res.Body), &resp)
-	if err != nil {
-		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, res, xbase.ComErrUnmarshalBodyFailed
-	}
-	if resp.Errno != xbase.XassetErrNoSucc {
-		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
-			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
-		return nil, res, xbase.ComErrServRespErrnoErr
-	}
-
-	t.Logger.Trace("operate succ. [meta:%+v] [url:%s] [request_id:%s] [trace_id:%s]",
-		resp.Meta, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
-	return &resp, res, nil
-}
-
-// GenListShardsByAddrBody uses the general parameter as follows,
-//    {
-//		   Addr  string `json:"addr"`
-//		   Page  int    `json:"page"`
-//		   Limit int    `json:"limit"`
-// 	  }
-func (t *AssetOper) genListShardsByAddrBody(param *xbase.ListShardsByAddrParam) (string, error) {
-	v := url.Values{}
-	v.Set("addr", param.Addr)
-	v.Set("page", fmt.Sprintf("%d", param.Page))
-	v.Set("limit", fmt.Sprintf("%d", param.Limit))
-	body := v.Encode()
-	return body, nil
-}
-
-func (t *AssetOper) ListShardsByAddr(param *xbase.ListShardsByAddrParam) (*xbase.ListPageResp, *xbase.RequestRes, error) {
-	if err := param.Valid(); err != nil {
-		return nil, nil, err
-	}
-	body, _ := t.genListShardsByAddrBody(param)
-
-	res, err := t.Post(xbase.AssetApiListShardsByAddr, body)
-	if err != nil {
-		t.Logger.Warn("post request xasset failed. err: %v", err)
-		return nil, nil, xbase.ComErrRequsetFailed
-	}
-	if res.HttpCode != 200 {
-		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, nil, xbase.ComErrRespCodeErr
-	}
-
-	var resp xbase.ListPageResp
-	err = json.Unmarshal([]byte(res.Body), &resp)
-	if err != nil {
-		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, res, xbase.ComErrUnmarshalBodyFailed
-	}
-	if resp.Errno != xbase.XassetErrNoSucc {
-		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
-			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
-		return nil, res, xbase.ComErrServRespErrnoErr
-	}
-
-	t.Logger.Trace("operate succ. [total_cnt: %d] [url: %s] [request_id: %s] [trace_id: %s]", resp.TotalCnt,
-		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
-	return &resp, res, nil
-}
-
-func (t *AssetOper) genListAssetByAddrBody(param *xbase.ListAssetsByAddrParam) (string, error) {
-	v := url.Values{}
-	v.Set("addr", param.Addr)
-	v.Set("status", fmt.Sprintf("%d", param.Status))
-	v.Set("page", fmt.Sprintf("%d", param.Page))
-	v.Set("limit", fmt.Sprintf("%d", param.Limit))
-	body := v.Encode()
-	return body, nil
-}
-
-func (t *AssetOper) ListAssetsByAddr(param *xbase.ListAssetsByAddrParam) (*xbase.ListPageResp, *xbase.RequestRes, error) {
-	if err := param.Valid(); err != nil {
-		return nil, nil, err
-	}
-	body, _ := t.genListAssetByAddrBody(param)
-
-	res, err := t.Post(xbase.AssetApiListAssetByAddr, body)
-	if err != nil {
-		t.Logger.Warn("post request xasset failed. err: %v", err)
-		return nil, nil, xbase.ComErrRequsetFailed
-	}
-	if res.HttpCode != 200 {
-		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, nil, xbase.ComErrRespCodeErr
-	}
-
-	var resp xbase.ListPageResp
-	err = json.Unmarshal([]byte(res.Body), &resp)
-	if err != nil {
-		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, res, xbase.ComErrUnmarshalBodyFailed
-	}
-	if resp.Errno != xbase.XassetErrNoSucc {
-		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
-			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
-		return nil, res, xbase.ComErrServRespErrnoErr
-	}
-
-	t.Logger.Trace("operate succ. [total_cnt: %d] [url: %s] [request_id: %s] [trace_id: %s]", resp.TotalCnt,
-		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
-	return &resp, res, nil
-}
-
-func (t *AssetOper) genListShardsByAssetBody(param *xbase.ListShardsByAssetParam) (string, error) {
-	v := url.Values{}
-	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
-	v.Set("cursor", param.Cursor)
-	v.Set("limit", fmt.Sprintf("%d", param.Limit))
-	body := v.Encode()
-	return body, nil
-}
-
-func (t *AssetOper) ListShardsByAsset(param *xbase.ListShardsByAssetParam) (*xbase.ListCursorResp, *xbase.RequestRes, error) {
-	if err := param.Valid(); err != nil {
-		return nil, nil, err
-	}
-	body, _ := t.genListShardsByAssetBody(param)
-
-	res, err := t.Post(xbase.AssetListShardsByAsset, body)
-	if err != nil {
-		t.Logger.Warn("post request xasset failed. err: %v", err)
-		return nil, nil, xbase.ComErrRequsetFailed
-	}
-	if res.HttpCode != 200 {
-		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, nil, xbase.ComErrRespCodeErr
-	}
-
-	var resp xbase.ListCursorResp
-	err = json.Unmarshal([]byte(res.Body), &resp)
-	if err != nil {
-		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, res, xbase.ComErrUnmarshalBodyFailed
-	}
-	if resp.Errno != xbase.XassetErrNoSucc {
-		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
-			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
-		return nil, res, xbase.ComErrServRespErrnoErr
-	}
-
-	t.Logger.Trace("operate succ. [cursor: %s] [has_more: %d] [url: %s] [request_id: %s] [trace_id: %s]", resp.Cursor, resp.HasMore,
-		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
-	return &resp, res, nil
-}
-
-// GenEvidenceBody uses the general parameter for getting shard as follows,
-//    {
-// 		   AssetId  int64  `json:"asset_id"`
-// 		   ShardId  int64  `json:"shard_id"`
-// 	  }
-func (t *AssetOper) genEvidenceBody(param *xbase.GetEvidenceInfoParam) (string, error) {
-	v := url.Values{}
-	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
-	v.Set("shard_id", fmt.Sprintf("%d", param.ShardId))
-	body := v.Encode()
-	return body, nil
-}
-
-func (t *AssetOper) GetEvidenceInfo(param *xbase.GetEvidenceInfoParam) (*xbase.GetEvidenceInfoResp, *xbase.RequestRes, error) {
-	if err := param.Valid(); err != nil {
-		return nil, nil, err
-	}
-	body, _ := t.genEvidenceBody(param)
-
-	res, err := t.Post(xbase.AssetApiGetEvidenceInfo, body)
-	if err != nil {
-		t.Logger.Warn("post request xasset failed. err: %v", err)
-		return nil, nil, xbase.ComErrRequsetFailed
-	}
-	if res.HttpCode != 200 {
-		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, nil, xbase.ComErrRespCodeErr
-	}
-
-	var resp xbase.GetEvidenceInfoResp
-	err = json.Unmarshal([]byte(res.Body), &resp)
-	if err != nil {
-		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, res, xbase.ComErrUnmarshalBodyFailed
-	}
-	if resp.Errno != xbase.XassetErrNoSucc {
-		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
-			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
-		return nil, res, xbase.ComErrServRespErrnoErr
-	}
-
-	t.Logger.Trace("operate succ. [create_addr: %s] [tx_id: %s] [asset_info: %v] [ctime: %d] [url: %s] [request_id: %s] [trace_id: %s]",
-		resp.CreateAddr, resp.TxId, resp.AssetInfo, resp.Ctime, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
-	return &resp, res, nil
-}
-
-// GenTransferAssetBody uses the general parameter for transferring as follows,
+// GenTransferAssetBody uses the general parameter as follows,
 //    {
 // 		   AssetId  int64  `json:"asset_id"`
 // 		   ShardId  int64  `json:"shard_id"`
@@ -810,6 +636,239 @@ func (t *AssetOper) TransferAsset(param *xbase.TransferAssetParam) (*xbase.BaseR
 	return &resp, res, nil
 }
 
+// GenQueryShardsBody uses the general parameter as follows,
+//    {
+// 		   AssetId  int64  `json:"asset_id"`
+// 		   ShardId  int64  `json:"shard_id"`
+// 	  }
+func (t *AssetOper) genQueryShardsBody(param *xbase.QueryShardParam) (string, error) {
+	v := url.Values{}
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("shard_id", fmt.Sprintf("%d", param.ShardId))
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) QueryShard(param *xbase.QueryShardParam) (*xbase.QueryShardResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, _ := t.genQueryShardsBody(param)
+
+	res, err := t.Post(xbase.AssetApiQueryShard, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.QueryShardResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [meta:%+v] [url:%s] [request_id:%s] [trace_id:%s]",
+		resp.Meta, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// GenListShardsByAddrBody uses the general parameter as follows,
+//    {
+//		   Addr  string `json:"addr"`
+//		   Page  int    `json:"page"`
+//		   Limit int    `json:"limit"`
+// 	  }
+func (t *AssetOper) genListShardsByAddrBody(param *xbase.ListShardsByAddrParam) (string, error) {
+	v := url.Values{}
+	v.Set("addr", param.Addr)
+	v.Set("page", fmt.Sprintf("%d", param.Page))
+	v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) ListShardsByAddr(param *xbase.ListShardsByAddrParam) (*xbase.ListShardsByAddrResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, _ := t.genListShardsByAddrBody(param)
+
+	res, err := t.Post(xbase.AssetApiListShardsByAddr, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.ListShardsByAddrResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [total_cnt: %d] [url: %s] [request_id: %s] [trace_id: %s]", resp.TotalCnt,
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// GenListShardsByAssetBody uses the general parameter as follows,
+//    {
+//		   AssetId  int64 	`json:"asset_id"`
+//		   Cursor   string 	`json:"cursor"`
+//		   Limit  	int    	`json:"limit"`
+// 	  }
+func (t *AssetOper) genListShardsByAssetBody(param *xbase.ListShardsByAssetParam) (string, error) {
+	v := url.Values{}
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("cursor", param.Cursor)
+	v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) ListShardsByAsset(param *xbase.ListShardsByAssetParam) (*xbase.ListShardsByAssetResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, _ := t.genListShardsByAssetBody(param)
+
+	res, err := t.Post(xbase.AssetListShardsByAsset, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.ListShardsByAssetResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [cursor: %s] [has_more: %d] [url: %s] [request_id: %s] [trace_id: %s]", resp.Cursor, resp.HasMore,
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) ListAssetHistory(param *xbase.ListAssetHisParam) (*xbase.ListAssetHistoryResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+
+	v := url.Values{}
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("page", fmt.Sprintf("%d", param.Page))
+	v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	body := v.Encode()
+
+	res, err := t.Post(xbase.ListAssetHistory, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.ListAssetHistory, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.ListAssetHistoryResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrUnmarshalBodyFailed
+	}
+	t.Logger.Trace("operate succ. [asset_id: %d] [url: %s] [request_id: %s] [trace_id: %s] [resp: %+v]",
+		param.AssetId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header), resp)
+	return &resp, res, nil
+}
+
+// GenEvidenceBody uses the general parameter as follows,
+//    {
+// 		   AssetId  int64  `json:"asset_id"`
+// 	  }
+func (t *AssetOper) genEvidenceBody(param *xbase.GetEvidenceInfoParam) (string, error) {
+	v := url.Values{}
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) GetEvidenceInfo(param *xbase.GetEvidenceInfoParam) (*xbase.GetEvidenceInfoResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, _ := t.genEvidenceBody(param)
+
+	res, err := t.Post(xbase.AssetApiGetEvidenceInfo, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.GetEvidenceInfoResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [create_addr: %s] [tx_id: %s] [asset_info: %v] [ctime: %d] [url: %s] [request_id: %s] [trace_id: %s]",
+		resp.CreateAddr, resp.TxId, resp.AssetInfo, resp.Ctime, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// GenFreezeBody uses the general parameter as follows,
+//    {
+// 		   AssetId  int64  			`json:"asset_id"`
+// 		   Account  *auth.Account	`json:"account"`
+// 	  }
 func (t *AssetOper) genFreezeAssetBody(param *xbase.FreezeAssetParam) (string, error) {
 	nonce := utils.GenNonce()
 	signMsg := fmt.Sprintf("%d%d", param.AssetId, nonce)
@@ -867,6 +926,16 @@ func (t *AssetOper) FreezeAsset(param *xbase.FreezeAssetParam) (*xbase.BaseResp,
 	return &resp, res, nil
 }
 
+// GenConsumeBody uses the general parameter as follows,
+//    {
+//			AssetId  int64         `json:"asset_id"`
+//			ShardId  int64         `json:"shard_id"`
+//			Nonce    int64         `json:"nonce"`
+//			UAddr    string        `json:"user_addr"`
+//			USign    string        `json:"user_sign"`
+//			UPKey    string        `json:"user_pkey"`
+//			CAccount *auth.Account `json:"create_account"`
+// 	  }
 func (t *AssetOper) genConsumeShardBody(param *xbase.ConsumeShardParam) (string, error) {
 	signMsg := fmt.Sprintf("%d%d", param.AssetId, param.Nonce)
 	sign, err := auth.XassetSignECDSA(param.CAccount.PrivateKey, []byte(signMsg))
@@ -925,39 +994,5 @@ func (t *AssetOper) ConsumeShard(param *xbase.ConsumeShardParam) (*xbase.BaseRes
 
 	t.Logger.Trace("operate succ. [asset_id: %d] [shard_id: %d] [url: %s] [request_id: %s] [trace_id: %s]",
 		param.AssetId, param.ShardId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
-	return &resp, res, nil
-}
-
-func (t *AssetOper) ListAssetHistory(param *xbase.ListAssetHisParam) (*xbase.ListAssetHistoryResp, *xbase.RequestRes, error) {
-	if err := param.Valid(); err != nil {
-		return nil, nil, err
-	}
-
-	v := url.Values{}
-	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
-	v.Set("page", fmt.Sprintf("%d", param.Page))
-	v.Set("limit", fmt.Sprintf("%d", param.Limit))
-	body := v.Encode()
-
-	res, err := t.Post(xbase.ListAssetHistory, body)
-	if err != nil {
-		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.ListAssetHistory, err)
-		return nil, nil, xbase.ComErrRequsetFailed
-	}
-	if res.HttpCode != 200 {
-		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, nil, xbase.ComErrRespCodeErr
-	}
-
-	var resp xbase.ListAssetHistoryResp
-	err = json.Unmarshal([]byte(res.Body), &resp)
-	if err != nil {
-		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
-			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
-		return nil, nil, xbase.ComErrUnmarshalBodyFailed
-	}
-	t.Logger.Trace("operate succ. [asset_id: %d] [url: %s] [request_id: %s] [trace_id: %s] [resp: %+v]",
-		param.AssetId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header), resp)
 	return &resp, res, nil
 }

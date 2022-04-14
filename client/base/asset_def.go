@@ -88,7 +88,7 @@ func (t *UploadFileParam) Valid() error {
 
 type UploadFileResp struct {
 	Link       string      `json:"link"`
-	AccessInfo interface{} `json:"accessInfo"`
+	AccessInfo *AccessInfo `json:"accessInfo"`
 }
 
 ///////// Create Asset ///////////
@@ -132,6 +132,7 @@ type CreateAssetParam struct {
 	AssetInfo *CreateAssetInfo `json:"asset_info"`
 	Account   *auth.Account    `json:"account"`
 	UserId    int64            `json:"user_id,omitempty"`
+	FileHash  string           `json:"file_hash,omitempty"`
 }
 
 func (t *CreateAssetParam) Valid() error {
@@ -198,6 +199,7 @@ type AlterAssetParam struct {
 	AssetId   int64           `json:"asset_id"`
 	Price     int64           `json:"price,omitempty"`
 	Amount    int             `json:"amount,omitempty"`
+	FileHash  string          `json:"file_hash"`
 	AssetInfo *AlterAssetInfo `json:"asset_info"`
 	Account   *auth.Account   `json:"account"`
 }
@@ -353,6 +355,7 @@ type QueryShardMeta struct {
 	ShardId   int64           `json:"shard_id"`
 	Price     int64           `json:"price"`
 	OwnerAddr string          `json:"owner_addr"`
+	OwnerUid  int64           `json:"owner_uid"`
 	Status    int             `json:"status"`
 	TxId      string          `json:"tx_id"`
 	AssetInfo *ShardAssetInfo `json:"asset_info"`
@@ -368,13 +371,6 @@ type ShardAssetInfo struct {
 }
 
 ///////// List Shard By Address //////////
-type ListCursorResp struct {
-	BaseResp
-	List    interface{} `json:"list"`
-	HasMore int         `json:"has_more"`
-	Cursor  string      `json:"cursor"`
-}
-
 type ListShardsByAddrParam struct {
 	Addr  string `json:"addr"`
 	Page  int    `json:"page"`
@@ -394,13 +390,13 @@ func (t *ListShardsByAddrParam) Valid() error {
 	return nil
 }
 
-type ListPageResp struct {
+type ListShardsByAddrResp struct {
 	BaseResp
-	List     interface{} `json:"list"`
-	TotalCnt int         `json:"total_cnt"`
+	List     []*QueryShardMeta `json:"list"`
+	TotalCnt int               `json:"total_cnt"`
 }
 
-///////// List Asset By Address //////////
+///////// List Assets By Address //////////
 type ListAssetsByAddrParam struct {
 	Addr   string `json:"addr"`
 	Status int    `json:"status"`
@@ -421,7 +417,13 @@ func (t *ListAssetsByAddrParam) Valid() error {
 	return nil
 }
 
-///////// List Asset By Address //////////
+type ListAssetsByAddrResp struct {
+	BaseResp
+	List     []*QueryAssetMeta `json:"list"`
+	TotalCnt int               `json:"total_cnt"`
+}
+
+///////// List Shards By Asset //////////
 type ListShardsByAssetParam struct {
 	AssetId int64  `json:"asset_id"`
 	Cursor  string `json:"cursor"`
@@ -435,13 +437,22 @@ func (t *ListShardsByAssetParam) Valid() error {
 	if err := AssetIdValid(t.AssetId); err != nil {
 		return err
 	}
+	if err := AmountInvalid(t.Limit); err != nil {
+		return err
+	}
 	return nil
+}
+
+type ListShardsByAssetResp struct {
+	BaseResp
+	List    []*QueryShardMeta `json:"list"`
+	Cursor  string            `json:"cursor"`
+	HasMore int               `json:"has_more"`
 }
 
 ///////////// Get Evidence Info /////////////
 type GetEvidenceInfoParam struct {
 	AssetId int64 `json:"asset_id"`
-	ShardId int64 `json:"shard_id"`
 }
 
 func (t *GetEvidenceInfoParam) Valid() error {
@@ -451,9 +462,6 @@ func (t *GetEvidenceInfoParam) Valid() error {
 	if err := AssetIdValid(t.AssetId); err != nil {
 		return err
 	}
-	if err := ShardIdValid(t.ShardId); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -461,6 +469,8 @@ type GetEvidenceInfoResp struct {
 	BaseResp
 	CreateAddr string            `json:"create_addr"`
 	TxId       string            `json:"tx_id"`
+	FileHash   string            `json:"file_hash"`
+	GhCertId   string            `json:"gh_cert_id"`
 	AssetInfo  *HoraeAssetObject `json:"asset_info"`
 	Ctime      int64             `json:"ctime"`
 }
@@ -530,14 +540,12 @@ func (t *FreezeAssetParam) Valid() error {
 
 ////////// Consume Shard ////////////
 type ConsumeShardParam struct {
-	AssetId int64 `json:"asset_id"`
-	ShardId int64 `json:"shard_id"`
-
-	Nonce int64  `json:"nonce"`
-	UAddr string `json:"user_addr"`
-	USign string `json:"user_sign"`
-	UPKey string `json:"user_pkey"`
-
+	AssetId  int64         `json:"asset_id"`
+	ShardId  int64         `json:"shard_id"`
+	Nonce    int64         `json:"nonce"`
+	UAddr    string        `json:"user_addr"`
+	USign    string        `json:"user_sign"`
+	UPKey    string        `json:"user_pkey"`
 	CAccount *auth.Account `json:"create_account"`
 }
 
@@ -563,6 +571,7 @@ func (t *ConsumeShardParam) Valid() error {
 	return nil
 }
 
+////////// Get History ////////////
 type ListAssetHisParam struct {
 	AssetId int64 `json:"asset_id"`
 	Page    int   `json:"page"`
@@ -582,10 +591,21 @@ func (t *ListAssetHisParam) Valid() error {
 	return nil
 }
 
+type HistoryMeta struct {
+	AssetId int64  `json:"asset_id"`
+	Type    int    `json:"type"`
+	ShardId int64  `json:"shard_id"`
+	Price   int64  `json:"price"`
+	TxId    string `json:"tx_id"`
+	From    string `json:"from"`
+	To      string `json:"to"`
+	Ctime   int64  `json:"ctime"`
+}
+
 type ListAssetHistoryResp struct {
 	BaseResp
-	List     interface{} `json:"list"`
-	TotalCnt int         `json:"total_cnt"`
-	Cursor   string      `json:"cursor"`
-	HasMore  int         `json:"has_more"`
+	List     []*HistoryMeta `json:"list"`
+	TotalCnt int            `json:"total_cnt"`
+	Cursor   string         `json:"cursor"`
+	HasMore  int            `json:"has_more"`
 }

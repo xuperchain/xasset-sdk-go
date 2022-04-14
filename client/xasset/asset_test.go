@@ -269,7 +269,6 @@ func TestXasset(t *testing.T) {
 	// GetEvidenceInfo
 	evidenceParam := &base.GetEvidenceInfoParam{
 		AssetId: assetId,
-		ShardId: shardId,
 	}
 	_, _, err = handle.GetEvidenceInfo(evidenceParam)
 	if err != nil {
@@ -288,41 +287,41 @@ func TestXasset(t *testing.T) {
 		t.Errorf("ListAssetHistory error.err:%v", err)
 		return
 	}
-}
 
-func TestListShardsByAddr(t *testing.T) {
-	param := &base.ListShardsByAddrParam{
+	listSdsByAddrParam := &base.ListShardsByAddrParam{
 		Addr:  AccountA.Address,
 		Page:  1,
 		Limit: 20,
 	}
-	lResp, _, err := handle.ListShardsByAddr(param)
+	lResp, _, err := handle.ListShardsByAddr(listSdsByAddrParam)
 	if err != nil {
 		t.Errorf("list asset error. err: %v", err)
 		return
 	}
-	if lResp.TotalCnt <= 0 {
-		t.Error("read asset error")
-		return
-	}
 	t.Logf("Query srds, param: %+v, resp: %+v", param, lResp)
-}
 
-func TestListAssetByAddr(t *testing.T) {
-	param := &base.ListAssetsByAddrParam{
+	listAstByAddrParam := &base.ListAssetsByAddrParam{
 		Addr:   AccountA.Address,
 		Status: 1,
 		Page:   1,
 		Limit:  20,
 	}
-	lResp, _, err := handle.ListAssetsByAddr(param)
+	rResp, _, err := handle.ListAssetsByAddr(listAstByAddrParam)
 	if err != nil {
 		t.Errorf("list asset error. err: %v", err)
 		return
 	}
-	if lResp.TotalCnt <= 0 {
-		t.Error("read asset error")
+	t.Logf("Query ast, param: %+v, resp: %+v", param, rResp)
+
+	listSdsByAstParam := &base.ListShardsByAssetParam{
+		AssetId: assetId,
+		Limit:   20,
+	}
+
+	qResp, _, err := handle.ListShardsByAsset(listSdsByAstParam)
+	if err != nil {
+		t.Errorf("list asset error. err: %v", err)
 		return
 	}
-	t.Logf("Query ast, param: %+v, resp: %+v", param, lResp)
+	t.Logf("Query srds, param: %+v, resp: %+v", param, qResp)
 }
