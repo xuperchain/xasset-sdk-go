@@ -591,7 +591,7 @@ func (t *AssetOper) genTransferAssetBody(param *xbase.TransferAssetParam) (strin
 	v.Set("nonce", fmt.Sprintf("%d", nonce))
 	v.Set("to_addr", param.ToAddr)
 	if err := xbase.IdValid(param.ToUserId); err == nil {
-		v.Set("to_userid", param.Addr)
+		v.Set("to_userid", fmt.Sprintf("%d", param.ToUserId))
 	}
 	return v.Encode(), nil
 }
