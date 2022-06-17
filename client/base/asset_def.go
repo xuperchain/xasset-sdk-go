@@ -574,6 +574,7 @@ func (t *ConsumeShardParam) Valid() error {
 ////////// Get History ////////////
 type ListAssetHisParam struct {
 	AssetId int64 `json:"asset_id"`
+	ShardId int64 `json:"shard_id"`
 	Page    int   `json:"page"`
 	Limit   int   `json:"limit"`
 }
