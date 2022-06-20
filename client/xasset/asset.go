@@ -791,6 +791,7 @@ func (t *AssetOper) ListAssetHistory(param *xbase.ListAssetHisParam) (*xbase.Lis
 
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("shard_id", fmt.Sprintf("%d", param.ShardId))
 	v.Set("page", fmt.Sprintf("%d", param.Page))
 	v.Set("limit", fmt.Sprintf("%d", param.Limit))
 	body := v.Encode()
