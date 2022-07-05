@@ -161,6 +161,32 @@ func TestAlterAsset(t *testing.T) {
 	}
 }
 
+func TestScene(t *testing.T) {
+	handle, _ := NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
+
+	param1 := base.SceneListShardByAddrParam{}
+	resp1, _, err := handle.SceneListShardByAddr(&param1)
+	if err != nil {
+		t.Errorf("scene listshardbyaddr error, err: %v, addr: %s", err, param1.Addr)
+		return
+	}
+
+	fmt.Println(resp1.List[0].Title)
+
+	param2 := base.SceneQueryShardParam{
+		AssetId: 963581463228618626,
+		ShardId: 9091098622548975525,
+	}
+
+	resp2, _, err := handle.SceneQueryShard(&param2)
+	if err != nil {
+		t.Errorf("scene queryshard error, err: %v, addr: %s", err, param2.Addr)
+		return
+	}
+
+	fmt.Println(resp2.Meta.TxId)
+}
+
 func TestXasset(t *testing.T) {
 	// Create Asset
 	assetId, err := CreatetAnAsset(AccountA)
