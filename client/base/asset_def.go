@@ -20,6 +20,9 @@ const (
 	AssetApiGetEvidenceInfo  = "/xasset/horae/v1/getevidenceinfo"
 	FileApiGetStoken         = "/xasset/file/v1/getstoken"
 	ListAssetHistory         = "/xasset/horae/v1/history"
+
+	SceneListShardByAddr = "/xasset/scene/v1/listsdsbyaddr"
+	SceneQueryShard      = "/xasset/scene/v1/qrysdsinfo"
 )
 
 /////// Gen Token /////////
@@ -609,4 +612,88 @@ type ListAssetHistoryResp struct {
 	TotalCnt int            `json:"total_cnt"`
 	Cursor   string         `json:"cursor"`
 	HasMore  int            `json:"has_more"`
+}
+
+////////// Scene ListShardByAddr ////////////
+type SceneListShardByAddrParam struct {
+	Addr   string `json:"addr"`
+	Token  string `json:"token"`
+	Cursor string `json:"cursor"`
+	Limit  int    `json:"limit"`
+}
+
+func (t *SceneListShardByAddrParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := AddrValid(t.Addr); err != nil {
+		return err
+	}
+	if err := DescValid(t.Token); err != nil {
+		return err
+	}
+	return nil
+}
+
+type SceneListShardByAddrResp struct {
+	BaseResp
+	List    []*SceneListMeta `json:"list"`
+	Cursor  string           `json:"cursor"`
+	HasMore int              `json:"has_more"`
+}
+
+type SceneListMeta struct {
+	AssetId int64      `json:"asset_id"`
+	ShardId int64      `json:"shard_id"`
+	Title   string     `json:"title"`
+	Thumb   []ThumbMap `json:"thumb"`
+}
+
+////////// Scene QueryShard ////////////
+type SceneQueryShardParam struct {
+	Addr    string `json:"addr"`
+	Token   string `json:"token"`
+	AssetId int64  `json:"asset_id"`
+	ShardId int64  `json:"shard_id"`
+}
+
+func (t *SceneQueryShardParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := AddrValid(t.Addr); err != nil {
+		return err
+	}
+	if err := DescValid(t.Token); err != nil {
+		return err
+	}
+	if err := IdValid(t.AssetId); err != nil {
+		return err
+	}
+	if err := IdValid(t.ShardId); err != nil {
+		return err
+	}
+	return nil
+}
+
+type SceneQueryShardResp struct {
+	BaseResp
+	Meta *SceneQueryMeta `json:"meta"`
+}
+
+type SceneQueryMeta struct {
+	AssetId    int64      `json:"asset_id"`
+	ShardId    int64      `json:"shard_id"`
+	OwnerAddr  string     `json:"owner_addr"`
+	Status     int        `json:"status"`
+	TxId       string     `json:"tx_id"`
+	Ctime      int64      `json:"ctime"`
+	JumpLink   string     `json:"jump_link"`
+	Price      int64      `json:"price"`
+	Title      string     `json:"title"`
+	Thumb      []ThumbMap `json:"thumb"`
+	AssetUrl   []string   `json:"asset_url"`
+	ImgDesc    []string   `json:"img_desc"`
+	ShortDesc  string     `json:"short_desc"`
+	CreateAddr string     `json:"create_addr"`
 }
