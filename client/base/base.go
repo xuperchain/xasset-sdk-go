@@ -65,6 +65,7 @@ const (
 )
 
 var (
+	ErrParamInvalid      = errors.New("param invalid")
 	ErrAssetInvalid      = errors.New("asset invalid, must be a positive integer")
 	ErrAddressInvalid    = errors.New("address invalid, empty string")
 	ErrUserIdInvalid     = errors.New("user id invalid, must be a positive integer")
