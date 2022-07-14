@@ -26,6 +26,7 @@ const (
 
 	SceneListShardByAddr = "/xasset/scene/v1/listsdsbyaddr"
 	SceneQueryShard      = "/xasset/scene/v1/qrysdsinfo"
+	SceneListDiffByAddr = "/xasset/scene/v1/listdiffbyaddr"
 )
 
 /////// Gen Token /////////
@@ -744,4 +745,32 @@ type SceneQueryMeta struct {
 	ImgDesc    []string   `json:"img_desc"`
 	ShortDesc  string     `json:"short_desc"`
 	CreateAddr string     `json:"create_addr"`
+}
+
+//////////// Scene listdiffbyaddr /////////////////
+type SceneListDiffByAddrParam struct {
+	Addr string `json:"addr"`
+	Token string `json:"token"`
+	// 可选参数
+	Limit  int    `json:"limit"`
+	Cursor string `json:"cursor"`
+	OpTyps string `json:"op_types"`
+}
+
+func (t *SceneListDiffByAddrParam) Valid() error {
+	if t == nil || t.Addr == "" || t.Token == "" || t.Limit > 50 {
+		return ErrParamInvalid
+	}
+
+	if t.OpTyps == "" {
+		return nil
+	}
+
+	var arr []int
+	err := json.Unmarshal([]byte(t.OpTyps), &arr)
+	if err != nil {
+		return ErrParamInvalid
+	}
+
+	return nil
 }
