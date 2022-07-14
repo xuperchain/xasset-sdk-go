@@ -480,9 +480,9 @@ func (t *AssetOper) ListAssetsByAddr(param *xbase.ListAssetsByAddrParam) (*xbase
 	return &resp, res, nil
 }
 
-// GenListAssetsByAddrBody uses the general parameter as follows,
+// GenListDiffByAddrBody uses the general parameter as follows,
 //    {
-//	    Addr string `json:"addr"`
+//	    Addr   string `json:"addr"`
 //    	Limit  int    `json:"limit"`
 //   	Cursor string `json:"cursor"`
 //    	OpTyps string `json:"op_types"`
@@ -1175,5 +1175,65 @@ func (t *AssetOper) SceneQueryShard(param *xbase.SceneQueryShardParam) (*xbase.S
 
 	t.Logger.Trace("operate succ. [addr: %s] [asset_id: %d] [shard_id: %d] [url: %s] [request_id: %s] [trace_id: %s]",
 		param.Addr, param.AssetId, param.ShardId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// GenSceneListDiffByAddrBody uses the general parameter as follows,
+//    {
+//	    Addr   string `json:"addr"`
+//		Token  string `json:"token"`
+//    	Limit  int    `json:"limit"`
+//   	Cursor string `json:"cursor"`
+//    	OpTyps string `json:"op_types"`
+// 	  }
+func (t *AssetOper) genSceneListDiffByAddrBody(param *xbase.SceneListDiffByAddrParam) (string, error) {
+	v := url.Values{}
+	v.Set("addr", param.Addr)
+	v.Set("token", param.Token)
+	if param.Limit > 0 {
+		v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	}
+	if param.Cursor != "" {
+		v.Set("cursor", param.Cursor)
+	}
+	if param.OpTyps != "" {
+		v.Set("op_types", param.OpTyps)
+	}
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) SceneListDiffByAddr(param *xbase.SceneListDiffByAddrParam) (*xbase.ListDiffByAddrResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, _ := t.genSceneListDiffByAddrBody(param)
+
+	res, err := t.Post(xbase.SceneListDiffByAddr, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.ListDiffByAddrResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [url: %s] [request_id: %s] [trace_id: %s]",
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
 	return &resp, res, nil
 }
