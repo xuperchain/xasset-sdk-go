@@ -1,6 +1,8 @@
 package base
 
 import (
+	"encoding/json"
+
 	"github.com/xuperchain/xasset-sdk-go/auth"
 )
 
@@ -18,6 +20,7 @@ const (
 	AssetApiListAssetByAddr  = "/xasset/horae/v1/listastbyaddr"
 	AssetListShardsByAsset   = "/xasset/horae/v1/listsdsbyast"
 	AssetApiGetEvidenceInfo  = "/xasset/horae/v1/getevidenceinfo"
+	AssetApiListDiffByAddr   = "/xasset/horae/v1/listdiffbyaddr"
 	FileApiGetStoken         = "/xasset/file/v1/getstoken"
 	ListAssetHistory         = "/xasset/horae/v1/history"
 
@@ -378,6 +381,8 @@ type ListShardsByAddrParam struct {
 	Addr  string `json:"addr"`
 	Page  int    `json:"page"`
 	Limit int    `json:"limit"`
+	// 可选
+	AssetId int64 `json:"asset_id"`
 }
 
 func (t *ListShardsByAddrParam) Valid() error {
@@ -424,6 +429,49 @@ type ListAssetsByAddrResp struct {
 	BaseResp
 	List     []*QueryAssetMeta `json:"list"`
 	TotalCnt int               `json:"total_cnt"`
+}
+
+//////////// listdiffbyaddr /////////////////
+type ListDiffByAddrParam struct {
+	Addr string `json:"addr"`
+	// 可选参数
+	Limit  int    `json:"limit"`
+	Cursor string `json:"cursor"`
+	OpTyps string `json:"op_types"`
+}
+
+func (t *ListDiffByAddrParam) Valid() error {
+	if t == nil || t.Addr == "" || t.Limit > 50 {
+		return ErrParamInvalid
+	}
+
+	if t.OpTyps == "" {
+		return nil
+	}
+
+	var arr []int
+	err := json.Unmarshal([]byte(t.OpTyps), &arr)
+	if err != nil {
+		return ErrParamInvalid
+	}
+
+	return nil
+}
+
+type ListDiffByAddrNode struct {
+	AssetId int64      `json:"asset_id"`
+	ShardId int64      `json:"shard_id"`
+	Operate int        `json:"operate"`
+	Title   string     `json:"title"`
+	Thumb   []ThumbMap `json:"thumb"`
+	Ctime   int64      `json:"ctime"`
+}
+
+type ListDiffByAddrResp struct {
+	BaseResp
+	List    []*ListDiffByAddrNode `json:"list"`
+	Cursor  string                `json:"cursor"`
+	HasMore int                   `json:"has_more"`
 }
 
 ///////// List Shards By Asset //////////

@@ -480,6 +480,64 @@ func (t *AssetOper) ListAssetsByAddr(param *xbase.ListAssetsByAddrParam) (*xbase
 	return &resp, res, nil
 }
 
+// GenListAssetsByAddrBody uses the general parameter as follows,
+//    {
+//	    Addr string `json:"addr"`
+//    	Limit  int    `json:"limit"`
+//   	Cursor string `json:"cursor"`
+//    	OpTyps string `json:"op_types"`
+// 	  }
+func (t *AssetOper) genListDiffByAddrBody(param *xbase.ListDiffByAddrParam) (string, error) {
+	v := url.Values{}
+	v.Set("addr", param.Addr)
+	if param.Limit > 0 {
+		v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	}
+	if param.Cursor != "" {
+		v.Set("cursor", param.Cursor)
+	}
+	if param.OpTyps != "" {
+		v.Set("op_types", param.OpTyps)
+	}
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) ListDiffByAddr(param *xbase.ListDiffByAddrParam) (*xbase.ListDiffByAddrResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, _ := t.genListDiffByAddrBody(param)
+
+	res, err := t.Post(xbase.AssetApiListDiffByAddr, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.ListDiffByAddrResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [url: %s] [request_id: %s] [trace_id: %s]",
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
 // GenGrantAssetBody Grant uses the general parameter as follows,
 //    {
 // 		   AssetId  int64  `json:"asset_id"`
@@ -695,6 +753,9 @@ func (t *AssetOper) genListShardsByAddrBody(param *xbase.ListShardsByAddrParam) 
 	v.Set("addr", param.Addr)
 	v.Set("page", fmt.Sprintf("%d", param.Page))
 	v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	if param.AssetId > 0 {
+		v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	}
 	body := v.Encode()
 	return body, nil
 }
@@ -791,9 +852,13 @@ func (t *AssetOper) ListAssetHistory(param *xbase.ListAssetHisParam) (*xbase.Lis
 
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
-	v.Set("shard_id", fmt.Sprintf("%d", param.ShardId))
 	v.Set("page", fmt.Sprintf("%d", param.Page))
-	v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	if param.Limit > 0 {
+		v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	}
+	if param.ShardId > 0 {
+		v.Set("shard_id", fmt.Sprintf("%d", param.ShardId))
+	}
 	body := v.Encode()
 
 	res, err := t.Post(xbase.ListAssetHistory, body)
