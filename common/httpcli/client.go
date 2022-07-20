@@ -59,13 +59,12 @@ func SendRequest(req *http.Request, ConnTimeoutMs, RWTimeoutMs int,
 	if v, ok := opt[OptTlsSipVerify]; ok && v == "1" {
 		transport.TLSClientConfig = &tls.Config{
 			CipherSuites: []uint16{
-				tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 			},
 			PreferServerCipherSuites: true,
 			InsecureSkipVerify:       true,
-			MinVersion:               tls.VersionTLS11,
-			MaxVersion:               tls.VersionTLS11,
+			MinVersion:               tls.VersionTLS12,
+			MaxVersion:               tls.VersionTLS12,
 		}
 	}
 
