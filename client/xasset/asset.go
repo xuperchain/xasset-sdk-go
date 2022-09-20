@@ -1237,3 +1237,242 @@ func (t *AssetOper) SceneListDiffByAddr(param *xbase.SceneListDiffByAddrParam) (
 		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
 	return &resp, res, nil
 }
+
+// SceneHasAssetByAddrBody
+// type SceneHasAssetByAddrParam struct {
+//	Addr     string `json:"addr"`
+//	Token    string `json:"token"`
+//	AssetIds string `json:"asset_ids"`
+//}
+func (t *AssetOper) genSceneHasAssetByAddrBody(param *xbase.SceneHasAssetByAddrParam) (string, error) {
+	v := url.Values{}
+	v.Set("addr", param.Addr)
+	v.Set("token", param.Token)
+	v.Set("asset_ids", param.AssetIds)
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) SceneHasAssetByAddr(param *xbase.SceneHasAssetByAddrParam) (*xbase.SceneHasAssetByAddrResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, _ := t.genSceneHasAssetByAddrBody(param)
+
+	res, err := t.Post(xbase.SceneHasAstByAddr, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. url: %s, err: %v", xbase.SceneHasAstByAddr, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.SceneHasAssetByAddrResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [url: %s] [request_id: %s] [trace_id: %s]",
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) SceneListAddr(uid string) (*xbase.SceneListAddrResp, *xbase.RequestRes, error) {
+	if err := xbase.UnionIdValid(uid); err != nil {
+		return nil, nil, err
+	}
+	v := url.Values{}
+	v.Set("union_id", uid)
+	body := v.Encode()
+
+	res, err := t.Post(xbase.SceneListAddr, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. url: %s, err: %v", xbase.SceneListAddr, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.SceneListAddrResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [url: %s] [request_id: %s] [trace_id: %s]",
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) BdBoxRegister(param *xbase.BdBoxRegisterParam) (*xbase.BdBoxRegisterResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	v := url.Values{}
+	v.Set("open_id", param.OpenId)
+	v.Set("app_key", param.AppKey)
+	body := v.Encode()
+
+	res, err := t.Post(xbase.DidApiRegister, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. url: %s, err: %v", xbase.DidApiRegister, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BdBoxRegisterResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [url: %s] [request_id: %s] [trace_id: %s]",
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) BdBoxBind(param *xbase.BdBoxBindParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	v := url.Values{}
+	v.Set("open_id", param.OpenId)
+	v.Set("app_key", param.AppKey)
+	v.Set("mnemonic", param.Mnemonic)
+	body := v.Encode()
+
+	res, err := t.Post(xbase.DidApiBind, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. url: %s, err: %v", xbase.DidApiBind, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BaseResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [url: %s] [request_id: %s] [trace_id: %s]",
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) BindByUnionId(param *xbase.BindByUnionIdParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	v := url.Values{}
+	v.Set("union_id", param.UnionId)
+	v.Set("mnemonic", param.Mnemonic)
+	body := v.Encode()
+
+	res, err := t.Post(xbase.DidApiBindByUid, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. url: %s, err: %v", xbase.DidApiBindByUid, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BaseResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [url: %s] [request_id: %s] [trace_id: %s]",
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) GetAddrByUnionId(uid string) (*xbase.GetAddrByUnionIdResp, *xbase.RequestRes, error) {
+	if err := xbase.UnionIdValid(uid); err != nil {
+		return nil, nil, err
+	}
+	v := url.Values{}
+	v.Set("union_id", uid)
+	body := v.Encode()
+
+	res, err := t.Post(xbase.DidApiGetAddrByUid, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. url: %s, err: %v", xbase.DidApiGetAddrByUid, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.GetAddrByUnionIdResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [url: %s] [request_id: %s] [trace_id: %s]",
+		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}

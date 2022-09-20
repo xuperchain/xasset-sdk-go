@@ -81,6 +81,11 @@ var (
 	ErrEvidenceInvalid   = errors.New("evidence type invalid, must between 0 to 1")
 	ErrBytesInvalid      = errors.New("bytes invalid, nil pointer")
 	ErrStatusInvalid     = errors.New("status invalid")
+	ErrAssetListInvalid  = errors.New("null asset list")
+	ErrUnionIdInvalid    = errors.New("union id invalid")
+	ErrOpenIdInvalid     = errors.New("open id invalid")
+	ErrAppKeyInvalid     = errors.New("app key invalid")
+	ErrMnemInvalid       = errors.New("mnemonic invalid")
 )
 
 type ThumbMap struct {
@@ -208,6 +213,36 @@ func StatusValid(status int) error {
 	}
 	return nil
 }
+
+func UnionIdValid(uid string) error {
+	if uid == "" {
+		return ErrUnionIdInvalid
+	}
+	return nil
+}
+
+func OpenIdValid(oid string) error {
+	if oid == ""{
+		return ErrOpenIdInvalid
+	}
+	return nil
+}
+
+func AppKeyValid(ak string) error {
+	if ak == "" {
+		return ErrAppKeyInvalid
+	}
+	return nil
+}
+
+func MnemonicValid(mnem string) error {
+	if mnem == "" {
+		return ErrMnemInvalid
+	}
+	return nil
+}
+
+
 
 /////// General Client ///////
 type RequestRes struct {

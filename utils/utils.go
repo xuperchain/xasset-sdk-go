@@ -11,6 +11,8 @@ import (
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/xuperchain/xasset-sdk-go/auth"
 )
 
 // Get call method by runtime.Caller
@@ -109,4 +111,37 @@ func GetHostName() string {
 	}
 
 	return hostname
+}
+
+// aes+base64 encode
+func AesEncode(str, key string) (string, error) {
+	if str == "" {
+		return "", fmt.Errorf("str is empty")
+	}
+
+	aesRes, err := auth.AesEncrypt([]byte(str), []byte(key))
+	if err != nil {
+		return "", err
+	}
+
+	return auth.Base64UrlEncode(aesRes), nil
+}
+
+// aes+base64 decode
+func AesDecode(str, key string) (string, error) {
+	if str == "" {
+		return "", fmt.Errorf("str is empty")
+	}
+
+	aesBytes, err := auth.Base64UrlDecode(str)
+	if err != nil {
+		return "", err
+	}
+
+	traceBytes, err := auth.AesDecrypt(aesBytes, []byte(key))
+	if err != nil {
+		return "", err
+	}
+
+	return string(traceBytes), nil
 }

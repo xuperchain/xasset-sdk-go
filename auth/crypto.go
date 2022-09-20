@@ -2,8 +2,12 @@ package auth
 
 import (
 	"crypto/ecdsa"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
 
 	"github.com/xuperchain/crypto/core/account"
 	"github.com/xuperchain/crypto/core/hash"
@@ -120,4 +124,80 @@ func VerifyAddrByPubKey(address string, pub *ecdsa.PublicKey) (bool, uint8) {
 	}
 
 	return account.VerifyAddressUsingPublicKey(address, pub)
+}
+
+func PKCS7Padding(ciphertext []byte, blockSize int) []byte {
+	padding := blockSize - len(ciphertext)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(ciphertext, padtext...)
+}
+
+func PKCS7UnPadding(origData []byte) []byte {
+	length := len(origData)
+	unpadding := int(origData[length-1])
+	return origData[:(length - unpadding)]
+}
+
+// 加密
+func AesEncrypt(origData, key []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	blockSize := block.BlockSize()
+
+	// 填充补齐
+	origData = PKCS7Padding(origData, blockSize)
+
+	// 加密
+	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize])
+	crypted := make([]byte, len(origData))
+	blockMode.CryptBlocks(crypted, origData)
+
+	return crypted, nil
+}
+
+// 解密
+func AesDecrypt(crypted, key []byte) ([]byte, error) {
+	// 获取block size
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	blockSize := block.BlockSize()
+	if len(crypted)%blockSize != 0 {
+		return nil, fmt.Errorf("crypted not full blocks")
+	}
+
+	// 解密
+	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
+	origData := make([]byte, len(crypted))
+	blockMode.CryptBlocks(origData, crypted)
+
+	// 校验解密后数据合法性，防止panic
+	unpadding := int(origData[len(origData)-1])
+	if len(origData) < blockSize || len(origData)%blockSize != 0 || unpadding > blockSize {
+		return nil, fmt.Errorf("origin data error.block_size:%d length:%d unpadding:%d",
+			blockSize, len(origData), unpadding)
+	}
+
+	// 去掉填充字符
+	origData = PKCS7UnPadding(origData)
+	return origData, nil
+}
+
+func Base64Encode(content []byte) string {
+	return base64.StdEncoding.EncodeToString(content)
+}
+
+func Base64Decode(content string) ([]byte, error) {
+	return base64.StdEncoding.DecodeString(content)
+}
+
+func Base64UrlEncode(content []byte) string {
+	return base64.RawURLEncoding.EncodeToString(content)
+}
+
+func Base64UrlDecode(content string) ([]byte, error) {
+	return base64.RawURLEncoding.DecodeString(content)
 }

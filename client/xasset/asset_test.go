@@ -351,3 +351,98 @@ func TestXasset(t *testing.T) {
 	}
 	t.Logf("Query srds, param: %+v, resp: %+v", param, qResp)
 }
+
+func TestSceneHasAsset(t *testing.T) {
+	handle, _ := NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
+
+	signedUid, err := utils.AesEncode(base.UnionId, base.TestSK)
+	if err != nil {
+		t.Errorf("fail to sign UnionId")
+		return
+	}
+	resp1, _, err := handle.SceneListAddr(signedUid)
+	if err != nil {
+		t.Errorf("scene list addr error, err: %v, union_id: %s", err, signedUid)
+		return
+	}
+
+	fmt.Println(len(resp1.List))
+
+	if len(resp1.List) == 0 {
+		return
+	}
+
+	param1 := &base.SceneHasAssetByAddrParam{}
+	param1.Addr = resp1.List[0].Addr
+	param1.Token = resp1.List[0].Token
+	param1.AssetIds = "[623062333210793858, 623062333210793859, 623062333210793856]"
+
+	resp2, _, err := handle.SceneHasAssetByAddr(param1)
+	if err != nil {
+		t.Errorf("scene list addr error, err: %v, param: %+v", err, param1)
+		return
+	}
+	fmt.Println(resp2)
+}
+
+func TestXassetDid(t *testing.T) {
+	handle, _ := NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
+
+	signedOpenId, err := utils.AesEncode(base.OpenId, base.TestSK)
+	if err != nil {
+		t.Errorf("fail to sign OpenId")
+		return
+	}
+	signedAppKey, err := utils.AesEncode(base.AppKey, base.TestSK)
+	if err != nil {
+		t.Errorf("fail to sign App Key")
+		return
+	}
+
+	param1 := &base.BdBoxRegisterParam{
+		OpenId: signedOpenId,
+		AppKey: signedAppKey,
+	}
+
+	resp1, _, err := handle.BdBoxRegister(param1)
+	if err != nil {
+		t.Errorf("bdbox register error, err: %v, param: %+v", err, param1)
+		return
+	}
+
+	fmt.Println(resp1.Address, resp1.IsNew)
+
+	signedMnem := resp1.Mnemonic
+	param2 := &base.BdBoxBindParam{
+		OpenId: signedOpenId,
+		AppKey: signedAppKey,
+		Mnemonic: signedMnem,
+	}
+	_, _, err = handle.BdBoxBind(param2)
+	if err != nil {
+		t.Errorf("bdbox bind error, err: %v, param: %+v", err, param2)
+		return
+	}
+
+	signedUid, err := utils.AesEncode(base.UnionId, base.TestSK)
+	if err != nil {
+		t.Errorf("fail to sign UnionId")
+		return
+	}
+	param3 := &base.BindByUnionIdParam{
+		UnionId: signedUid,
+		Mnemonic: signedMnem,
+	}
+	_, _, err = handle.BindByUnionId(param3)
+	if err != nil {
+		t.Errorf("bdbox bind by union id error, err: %v, param: %+v", err, param3)
+		return
+	}
+
+	resp2, _, err := handle.GetAddrByUnionId(signedUid)
+	if err != nil {
+		t.Errorf("get addr by union id error, err: %v, union id: %s", err, signedUid)
+		return
+	}
+	fmt.Println(resp2.Address)
+}

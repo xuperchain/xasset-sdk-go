@@ -71,3 +71,16 @@ handle, _ := xasset.NewAssetOperCli(cfg, &Logger{})
 handle.CreateAsset()
 
 ```
+
+### sk加解密
+```
+//导入包
+import (
+    github.com/xuperchain/xasset-sdk-go/utils
+)
+
+// 使用sk对union_id加密
+signedUnionId, _ := utils.AesEncode(unionId, sk)
+
+// 部分应用场景调用需要先加密后传输，请参考client/xasset下的单元测试
+```

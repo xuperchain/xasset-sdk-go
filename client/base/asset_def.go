@@ -26,7 +26,14 @@ const (
 
 	SceneListShardByAddr = "/xasset/scene/v1/listsdsbyaddr"
 	SceneQueryShard      = "/xasset/scene/v1/qrysdsinfo"
-	SceneListDiffByAddr = "/xasset/scene/v1/listdiffbyaddr"
+	SceneListDiffByAddr  = "/xasset/scene/v1/listdiffbyaddr"
+	SceneListAddr        = "/xasset/scene/v1/listaddr"
+	SceneHasAstByAddr    = "/xasset/scene/v1/hasastbyaddr"
+
+	DidApiRegister       = "/xasset/did/v1/bdboxregister"
+	DidApiBind           = "/xasset/did/v1/bdboxbind"
+	DidApiBindByUid      = "/xasset/did/v1/bindbyunionid"
+	DidApiGetAddrByUid   = "/xasset/did/v1/getaddrbyunionid"
 )
 
 /////// Gen Token /////////
@@ -749,7 +756,7 @@ type SceneQueryMeta struct {
 
 //////////// Scene listdiffbyaddr /////////////////
 type SceneListDiffByAddrParam struct {
-	Addr string `json:"addr"`
+	Addr  string `json:"addr"`
 	Token string `json:"token"`
 	// 可选参数
 	Limit  int    `json:"limit"`
@@ -773,4 +780,111 @@ func (t *SceneListDiffByAddrParam) Valid() error {
 	}
 
 	return nil
+}
+
+//////////// Scene hasassetbyaddr ///////////////
+type SceneHasAssetByAddrParam struct {
+	Addr     string `json:"addr"`
+	Token    string `json:"token"`
+	AssetIds string `json:"asset_ids"`
+}
+func (t *SceneHasAssetByAddrParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := AddrValid(t.Addr); err != nil {
+		return err
+	}
+	if err := DescValid(t.Token); err!= nil {
+		return err
+	}
+	if t.AssetIds == "" {
+		return ErrAssetListInvalid
+	}
+	return nil
+}
+type SceneHasAssetByAddrResp struct {
+	BaseResp
+	Result  map[string]int `json:"result"`
+}
+
+//////////// Scene listaddr /////////////////////
+type AddrGroupToken struct {
+	Addr    string `json:"addr"`
+	GroupId int64  `json:"group_id"`
+	Token   string `json:"token"`
+}
+type SceneListAddrResp struct {
+	BaseResp
+	List  []*AddrGroupToken `json:"list"`
+}
+
+//////////// Bdbox register ////////////////////
+type BdBoxRegisterParam struct {
+	OpenId string `json:"open_id"`
+	AppKey string `json:"app_key"`
+}
+func (t *BdBoxRegisterParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := OpenIdValid(t.OpenId); err != nil {
+		return err
+	}
+	if err := AppKeyValid(t.AppKey); err != nil {
+		return err
+	}
+	return nil
+}
+type BdBoxRegisterResp struct {
+	BaseResp
+	Address  string `json:"addr"`
+	Mnemonic string `json:"mnemonic"`
+	IsNew    int    `json:"is_new"`
+}
+
+///////////// Bdbox bind ////////////////////////
+type BdBoxBindParam struct {
+	OpenId    string `json:"open_id"`
+	AppKey    string `json:"app_key"`
+	Mnemonic  string `json:"mnemonic"`
+}
+func (t *BdBoxBindParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := OpenIdValid(t.OpenId); err != nil {
+		return err
+	}
+	if err := AppKeyValid(t.AppKey); err != nil {
+		return err
+	}
+	if err := MnemonicValid(t.Mnemonic); err != nil {
+		return err
+	}
+	return nil
+}
+
+///////////// Bind by union id /////////////////
+type BindByUnionIdParam struct {
+	UnionId   string  `json:"union_id"`
+	Mnemonic  string  `json:"mnemonic"`
+}
+func (t *BindByUnionIdParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := UnionIdValid(t.UnionId); err != nil {
+		return err
+	}
+	if err := MnemonicValid(t.Mnemonic); err != nil {
+		return err
+	}
+	return nil
+}
+
+//////////// Get addr by union id /////////////
+type GetAddrByUnionIdResp struct {
+	BaseResp
+	Address  string  `json:"address"`
 }
