@@ -7,12 +7,29 @@ import (
 	"github.com/xuperchain/xasset-sdk-go/common/config"
 )
 
+/*
 const (
 	// 需要修改为正确的配置
 	TestAppId    = 0
 	TestAK       = "xxx"
 	TestSK       = "xxx"
 	TestEndpoint = "http://120.48.16.137:8360"
+	Openid       = "xxx"
+	Appkey       = "xxx"
+	UnionId      = "xxx"
+)*/
+
+const (
+	// remember to del
+	TestAppId    = 300100
+	TestAK       = "032b9af2f1b776d69c8a55031f2ae68e"
+	TestSK       = "2cb51374f71d8d274b370685d36d2280"
+	TestEndpoint = "http://10.117.131.18:8360"
+)
+const (
+	OpenId  = "0qQzshUoZjh35XnUxXFas_C_Z2"
+	AppKey  = "3lsCeIYo00pErR7MBWzfZcR1nZpE42dq"
+	UnionId = "uCeh1dJxQdc6LUkhphVFb95dDYsXX3k"
 )
 
 var TestAccount, _ = auth.NewXchainEcdsaAccount(auth.MnemStrgthStrong, auth.MnemLangCN)
