@@ -14,8 +14,8 @@ const (
 	TestAK       = "xxx"
 	TestSK       = "xxx"
 	TestEndpoint = "http://120.48.16.137:8360"
-	Openid       = "xxx"
-	Appkey       = "xxx"
+	OpenId       = "xxx"
+	AppKey       = "xxx"
 	UnionId      = "xxx"
 )
 
