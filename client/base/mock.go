@@ -19,19 +19,6 @@ const (
 	UnionId      = "xxx"
 )*/
 
-const (
-	// remember to del
-	TestAppId    = 300100
-	TestAK       = "032b9af2f1b776d69c8a55031f2ae68e"
-	TestSK       = "2cb51374f71d8d274b370685d36d2280"
-	TestEndpoint = "http://10.117.131.18:8360"
-)
-const (
-	OpenId  = "0qQzshUoZjh35XnUxXFas_C_Z2"
-	AppKey  = "3lsCeIYo00pErR7MBWzfZcR1nZpE42dq"
-	UnionId = "uCeh1dJxQdc6LUkhphVFb95dDYsXX3k"
-)
-
 var TestAccount, _ = auth.NewXchainEcdsaAccount(auth.MnemStrgthStrong, auth.MnemLangCN)
 
 var TestTransAccount, _ = auth.NewXchainEcdsaAccount(auth.MnemStrgthStrong, auth.MnemLangCN)
