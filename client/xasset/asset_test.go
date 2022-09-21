@@ -351,3 +351,75 @@ func TestXasset(t *testing.T) {
 	}
 	t.Logf("Query srds, param: %+v, resp: %+v", param, qResp)
 }
+
+func TestSceneHasAsset(t *testing.T) {
+	handle, _ := NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
+
+	resp1, _, err := handle.SceneListAddr(base.UnionId)
+	if err != nil {
+		t.Errorf("scene list addr error, err: %v, union_id: %s", err, base.UnionId)
+		return
+	}
+
+	fmt.Println(len(resp1.List))
+	if len(resp1.List) == 0 {
+		return
+	}
+
+	param1 := &base.SceneHasAssetByAddrParam{}
+	param1.Addr = resp1.List[0].Addr
+	param1.Token = resp1.List[0].Token
+	param1.AssetIds = "[623062333210793858, 623062333210793859, 623062333210793856]"
+
+	resp2, _, err := handle.SceneHasAssetByAddr(param1)
+	if err != nil {
+		t.Errorf("scene list addr error, err: %v, param: %+v", err, param1)
+		return
+	}
+	fmt.Println(resp2)
+}
+
+func TestXassetDid(t *testing.T) {
+	handle, _ := NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
+
+	param1 := &base.BdBoxRegisterParam{
+		OpenId: base.OpenId,
+		AppKey: base.AppKey,
+	}
+
+	resp1, _, err := handle.BdBoxRegister(param1)
+	if err != nil {
+		t.Errorf("bdbox register error, err: %v, param: %+v", err, param1)
+		return
+	}
+
+	fmt.Println(resp1.Address, resp1.IsNew)
+
+	param2 := &base.BdBoxBindParam{
+		OpenId:   base.OpenId,
+		AppKey:   base.AppKey,
+		Mnemonic: resp1.Mnemonic,
+	}
+	_, _, err = handle.BdBoxBind(param2)
+	if err != nil {
+		t.Errorf("bdbox bind error, err: %v, param: %+v", err, param2)
+		return
+	}
+
+	param3 := &base.BindByUnionIdParam{
+		UnionId:  base.UnionId,
+		Mnemonic: resp1.Mnemonic,
+	}
+	_, _, err = handle.BindByUnionId(param3)
+	if err != nil {
+		t.Errorf("bdbox bind by union id error, err: %v, param: %+v", err, param3)
+		return
+	}
+
+	resp2, _, err := handle.GetAddrByUnionId(base.UnionId)
+	if err != nil {
+		t.Errorf("get addr by union id error, err: %v, union id: %s", err, base.UnionId)
+		return
+	}
+	fmt.Println(resp2.Address)
+}

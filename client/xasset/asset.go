@@ -30,12 +30,13 @@ func NewAssetOperCli(cfg *config.XassetCliConfig, logger logs.LogDriver) (*Asset
 }
 
 // genGetStokenBody Grant uses the general parameter as follows,
-//    {
-// 		   Addr     string `json:"addr"`
-// 		   Sign     string `json:"sign"`
-// 		   PKey     string `json:"pkey"`
-// 		   Nonce    int64  `json:"nonce"`
-// 	  }
+//
+//	   {
+//			   Addr     string `json:"addr"`
+//			   Sign     string `json:"sign"`
+//			   PKey     string `json:"pkey"`
+//			   Nonce    int64  `json:"nonce"`
+//		  }
 func (t *AssetOper) genGetStokenBody(param *xbase.GetStokenParam) (string, error) {
 	nonce := utils.GenNonce()
 	signMsg := fmt.Sprintf("%d", nonce)
@@ -146,18 +147,19 @@ func (t *AssetOper) UploadFile(param *xbase.UploadFileParam) (*xbase.UploadFileR
 }
 
 // GenCreateAssetBody uses the parameter as follows,
-// {
-// 		AssetId   int64  `json:"asset_id"`
-// 		Price     int64  `json:"price"`
-// 		Amount    int    `json:"amount"`
-// 		AssetInfo string `json:"asset_info"`
-// 		Addr      string `json:"addr"`
-// 		Sign      string `json:"sign"`
-// 		PKey      string `json:"pkey"`
-// 		Nonce     int64  `json:"nonce"`
-// 		UserId    int64  `json:"user_id,omitempty"`
-//		FileHash  string `json:"file_hash,omitempty"`
-// }
+//
+//	{
+//			AssetId   int64  `json:"asset_id"`
+//			Price     int64  `json:"price"`
+//			Amount    int    `json:"amount"`
+//			AssetInfo string `json:"asset_info"`
+//			Addr      string `json:"addr"`
+//			Sign      string `json:"sign"`
+//			PKey      string `json:"pkey"`
+//			Nonce     int64  `json:"nonce"`
+//			UserId    int64  `json:"user_id,omitempty"`
+//			FileHash  string `json:"file_hash,omitempty"`
+//	}
 func (t *AssetOper) genCreateAssetBody(appid int64, param *xbase.CreateAssetParam) (string, error) {
 	nonce := utils.GenNonce()
 	assetId := utils.GenAssetId(appid)
@@ -230,16 +232,17 @@ func (t *AssetOper) CreateAsset(param *xbase.CreateAssetParam) (*xbase.CreateAss
 }
 
 // GenAlterAssetBody uses the parameter as follows,
-// {
-// 		AssetId   int64  `json:"asset_id"`
-// 		Addr      string `json:"addr"`
-// 		Sign      string `json:"sign"`
-// 		PKey      string `json:"pkey"`
-// 		Nonce     int64  `json:"nonce"`
-// 		Amount    int    `json:"amount"`
-// 		AssetInfo string `json:"asset_info"`
-// 		FileHash  string `json:"file_hash"`
-// }
+//
+//	{
+//			AssetId   int64  `json:"asset_id"`
+//			Addr      string `json:"addr"`
+//			Sign      string `json:"sign"`
+//			PKey      string `json:"pkey"`
+//			Nonce     int64  `json:"nonce"`
+//			Amount    int    `json:"amount"`
+//			AssetInfo string `json:"asset_info"`
+//			FileHash  string `json:"file_hash"`
+//	}
 func (t *AssetOper) genAlterAssetBody(param *xbase.AlterAssetParam) (string, error) {
 	nonce := utils.GenNonce()
 	signMsg := fmt.Sprintf("%d%d", param.AssetId, nonce)
@@ -317,14 +320,15 @@ func (t *AssetOper) AlterAsset(param *xbase.AlterAssetParam) (*xbase.BaseResp, *
 }
 
 // GenPublishAssetBody uses the parameter as follows,
-// {
-// 		AssetId    int64  `json:"asset_id"`
-// 		Addr       string `json:"addr"`
-// 		Sign       string `json:"sign"`
-// 		PKey       string `json:"pkey"`
-// 		Nonce      int64  `json:"nonce"`
-//	    IsEvidence int    `json:"is_evidence,omitempty"`
-// }
+//
+//	{
+//			AssetId    int64  `json:"asset_id"`
+//			Addr       string `json:"addr"`
+//			Sign       string `json:"sign"`
+//			PKey       string `json:"pkey"`
+//			Nonce      int64  `json:"nonce"`
+//		    IsEvidence int    `json:"is_evidence,omitempty"`
+//	}
 func (t *AssetOper) genPublishAssetBody(param *xbase.PublishAssetParam) (string, error) {
 	nonce := utils.GenNonce()
 	signMsg := fmt.Sprintf("%d%d", param.AssetId, nonce)
@@ -383,9 +387,10 @@ func (t *AssetOper) PublishAsset(param *xbase.PublishAssetParam) (*xbase.BaseRes
 }
 
 // GenQueryAssetBody uses the parameter as follows,
-// {
-//		AssetId int64 `json:"asset_id"`
-// }
+//
+//	{
+//			AssetId int64 `json:"asset_id"`
+//	}
 func (t *AssetOper) genQueryAssetBody(param *xbase.QueryAssetParam) (string, error) {
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
@@ -429,12 +434,13 @@ func (t *AssetOper) QueryAsset(param *xbase.QueryAssetParam) (*xbase.QueryAssetR
 }
 
 // GenListAssetsByAddrBody uses the general parameter as follows,
-//    {
-//		   Addr   string `json:"addr"`
-//		   Page   int    `json:"page"`
-//		   Limit  int    `json:"limit"`
-//		   Status int	 `json:"status"`
-// 	  }
+//
+//	   {
+//			   Addr   string `json:"addr"`
+//			   Page   int    `json:"page"`
+//			   Limit  int    `json:"limit"`
+//			   Status int	 `json:"status"`
+//		  }
 func (t *AssetOper) genListAssetByAddrBody(param *xbase.ListAssetsByAddrParam) (string, error) {
 	v := url.Values{}
 	v.Set("addr", param.Addr)
@@ -481,12 +487,13 @@ func (t *AssetOper) ListAssetsByAddr(param *xbase.ListAssetsByAddrParam) (*xbase
 }
 
 // GenListDiffByAddrBody uses the general parameter as follows,
-//    {
-//	    Addr   string `json:"addr"`
-//    	Limit  int    `json:"limit"`
-//   	Cursor string `json:"cursor"`
-//    	OpTyps string `json:"op_types"`
-// 	  }
+//
+//	   {
+//		    Addr   string `json:"addr"`
+//	   	Limit  int    `json:"limit"`
+//	  	Cursor string `json:"cursor"`
+//	   	OpTyps string `json:"op_types"`
+//		  }
 func (t *AssetOper) genListDiffByAddrBody(param *xbase.ListDiffByAddrParam) (string, error) {
 	v := url.Values{}
 	v.Set("addr", param.Addr)
@@ -539,17 +546,18 @@ func (t *AssetOper) ListDiffByAddr(param *xbase.ListDiffByAddrParam) (*xbase.Lis
 }
 
 // GenGrantAssetBody Grant uses the general parameter as follows,
-//    {
-// 		   AssetId  int64  `json:"asset_id"`
-// 		   ShardId  int64  `json:"shard_id"`
-// 		   Addr     string `json:"addr"`
-// 		   Sign     string `json:"sign"`
-// 		   PKey     string `json:"pkey"`
-// 		   Nonce    int64  `json:"nonce"`
-// 		   ToAddr   string `json:"to_addr"`
-// 		   ToUserId int64  `json:"to_userid,omitempty"`
-//  	   Price 	int64  `json:"price",omitempty`
-// 	  }
+//
+//	   {
+//			   AssetId  int64  `json:"asset_id"`
+//			   ShardId  int64  `json:"shard_id"`
+//			   Addr     string `json:"addr"`
+//			   Sign     string `json:"sign"`
+//			   PKey     string `json:"pkey"`
+//			   Nonce    int64  `json:"nonce"`
+//			   ToAddr   string `json:"to_addr"`
+//			   ToUserId int64  `json:"to_userid,omitempty"`
+//	 	   Price 	int64  `json:"price",omitempty`
+//		  }
 func (t *AssetOper) genGrantAssetBody(appid int64, param *xbase.GrantAssetParam) (string, error) {
 	nonce := utils.GenNonce()
 	signMsg := fmt.Sprintf("%d%d", param.AssetId, nonce)
@@ -620,17 +628,18 @@ func (t *AssetOper) GrantAsset(param *xbase.GrantAssetParam) (*xbase.GrantAssetR
 }
 
 // GenTransferAssetBody uses the general parameter as follows,
-//    {
-// 		   AssetId  int64  `json:"asset_id"`
-// 		   ShardId  int64  `json:"shard_id"`
-//		   Price	int64  `json:"price"`
-// 		   Addr     string `json:"addr"`
-// 		   Sign     string `json:"sign"`
-// 		   PKey     string `json:"pkey"`
-// 		   Nonce    int64  `json:"nonce"`
-// 		   ToAddr   string `json:"to_addr"`
-// 		   ToUserId int64  `json:"to_userid,omitempty"`
-// 	  }
+//
+//	   {
+//			   AssetId  int64  `json:"asset_id"`
+//			   ShardId  int64  `json:"shard_id"`
+//			   Price	int64  `json:"price"`
+//			   Addr     string `json:"addr"`
+//			   Sign     string `json:"sign"`
+//			   PKey     string `json:"pkey"`
+//			   Nonce    int64  `json:"nonce"`
+//			   ToAddr   string `json:"to_addr"`
+//			   ToUserId int64  `json:"to_userid,omitempty"`
+//		  }
 func (t *AssetOper) genTransferAssetBody(param *xbase.TransferAssetParam) (string, error) {
 	nonce := utils.GenNonce()
 	signMsg := fmt.Sprintf("%d%d", param.AssetId, nonce)
@@ -695,10 +704,11 @@ func (t *AssetOper) TransferAsset(param *xbase.TransferAssetParam) (*xbase.BaseR
 }
 
 // GenQueryShardsBody uses the general parameter as follows,
-//    {
-// 		   AssetId  int64  `json:"asset_id"`
-// 		   ShardId  int64  `json:"shard_id"`
-// 	  }
+//
+//	   {
+//			   AssetId  int64  `json:"asset_id"`
+//			   ShardId  int64  `json:"shard_id"`
+//		  }
 func (t *AssetOper) genQueryShardsBody(param *xbase.QueryShardParam) (string, error) {
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
@@ -743,11 +753,12 @@ func (t *AssetOper) QueryShard(param *xbase.QueryShardParam) (*xbase.QueryShardR
 }
 
 // GenListShardsByAddrBody uses the general parameter as follows,
-//    {
-//		   Addr  string `json:"addr"`
-//		   Page  int    `json:"page"`
-//		   Limit int    `json:"limit"`
-// 	  }
+//
+//	   {
+//			   Addr  string `json:"addr"`
+//			   Page  int    `json:"page"`
+//			   Limit int    `json:"limit"`
+//		  }
 func (t *AssetOper) genListShardsByAddrBody(param *xbase.ListShardsByAddrParam) (string, error) {
 	v := url.Values{}
 	v.Set("addr", param.Addr)
@@ -796,11 +807,12 @@ func (t *AssetOper) ListShardsByAddr(param *xbase.ListShardsByAddrParam) (*xbase
 }
 
 // GenListShardsByAssetBody uses the general parameter as follows,
-//    {
-//		   AssetId  int64 	`json:"asset_id"`
-//		   Cursor   string 	`json:"cursor"`
-//		   Limit  	int    	`json:"limit"`
-// 	  }
+//
+//	   {
+//			   AssetId  int64 	`json:"asset_id"`
+//			   Cursor   string 	`json:"cursor"`
+//			   Limit  	int    	`json:"limit"`
+//		  }
 func (t *AssetOper) genListShardsByAssetBody(param *xbase.ListShardsByAssetParam) (string, error) {
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
@@ -885,9 +897,10 @@ func (t *AssetOper) ListAssetHistory(param *xbase.ListAssetHisParam) (*xbase.Lis
 }
 
 // GenEvidenceBody uses the general parameter as follows,
-//    {
-// 		   AssetId  int64  `json:"asset_id"`
-// 	  }
+//
+//	   {
+//			   AssetId  int64  `json:"asset_id"`
+//		  }
 func (t *AssetOper) genEvidenceBody(param *xbase.GetEvidenceInfoParam) (string, error) {
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
@@ -931,10 +944,11 @@ func (t *AssetOper) GetEvidenceInfo(param *xbase.GetEvidenceInfoParam) (*xbase.G
 }
 
 // GenFreezeBody uses the general parameter as follows,
-//    {
-// 		   AssetId  int64  			`json:"asset_id"`
-// 		   Account  *auth.Account	`json:"account"`
-// 	  }
+//
+//	   {
+//			   AssetId  int64  			`json:"asset_id"`
+//			   Account  *auth.Account	`json:"account"`
+//		  }
 func (t *AssetOper) genFreezeAssetBody(param *xbase.FreezeAssetParam) (string, error) {
 	nonce := utils.GenNonce()
 	signMsg := fmt.Sprintf("%d%d", param.AssetId, nonce)
@@ -993,15 +1007,16 @@ func (t *AssetOper) FreezeAsset(param *xbase.FreezeAssetParam) (*xbase.BaseResp,
 }
 
 // GenConsumeBody uses the general parameter as follows,
-//    {
-//			AssetId  int64         `json:"asset_id"`
-//			ShardId  int64         `json:"shard_id"`
-//			Nonce    int64         `json:"nonce"`
-//			UAddr    string        `json:"user_addr"`
-//			USign    string        `json:"user_sign"`
-//			UPKey    string        `json:"user_pkey"`
-//			CAccount *auth.Account `json:"create_account"`
-// 	  }
+//
+//	   {
+//				AssetId  int64         `json:"asset_id"`
+//				ShardId  int64         `json:"shard_id"`
+//				Nonce    int64         `json:"nonce"`
+//				UAddr    string        `json:"user_addr"`
+//				USign    string        `json:"user_sign"`
+//				UPKey    string        `json:"user_pkey"`
+//				CAccount *auth.Account `json:"create_account"`
+//		  }
 func (t *AssetOper) genConsumeShardBody(param *xbase.ConsumeShardParam) (string, error) {
 	signMsg := fmt.Sprintf("%d%d", param.AssetId, param.Nonce)
 	sign, err := auth.XassetSignECDSA(param.CAccount.PrivateKey, []byte(signMsg))
@@ -1064,12 +1079,13 @@ func (t *AssetOper) ConsumeShard(param *xbase.ConsumeShardParam) (*xbase.BaseRes
 }
 
 // GenSceneListShardByAddrBody uses the general parameter as follows,
-//    {
-//			Addr  	string     `json:"addr"`
-//			Token 	string     `json:"token"`
-//			Limit 	int        `json:"limit"`
-//			Cursor  string     `json:"cursor"`
-// 	  }
+//
+//	   {
+//				Addr  	string     `json:"addr"`
+//				Token 	string     `json:"token"`
+//				Limit 	int        `json:"limit"`
+//				Cursor  string     `json:"cursor"`
+//		  }
 func (t *AssetOper) genSceneListShardByAddrBody(param *xbase.SceneListShardByAddrParam) (string, error) {
 	v := url.Values{}
 	v.Set("addr", param.Addr)
@@ -1122,12 +1138,13 @@ func (t *AssetOper) SceneListShardByAddr(param *xbase.SceneListShardByAddrParam)
 }
 
 // GenSceneQueryShardBody uses the general parameter as follows,
-//    {
-//			Addr  		string     	`json:"addr"`
-//			Token 		string     	`json:"token"`
-//			AssetId 	int64 		`json: "asset_id"`
-//			ShardId 	int64 		`json: "shard_id"`
-// 	  }
+//
+//	   {
+//				Addr  		string     	`json:"addr"`
+//				Token 		string     	`json:"token"`
+//				AssetId 	int64 		`json: "asset_id"`
+//				ShardId 	int64 		`json: "shard_id"`
+//		  }
 func (t *AssetOper) genSceneQueryShardBody(param *xbase.SceneQueryShardParam) (string, error) {
 	v := url.Values{}
 	v.Set("addr", param.Addr)
@@ -1179,13 +1196,14 @@ func (t *AssetOper) SceneQueryShard(param *xbase.SceneQueryShardParam) (*xbase.S
 }
 
 // GenSceneListDiffByAddrBody uses the general parameter as follows,
-//    {
-//	    Addr   string `json:"addr"`
-//		Token  string `json:"token"`
-//    	Limit  int    `json:"limit"`
-//   	Cursor string `json:"cursor"`
-//    	OpTyps string `json:"op_types"`
-// 	  }
+//
+//	   {
+//		    Addr   string `json:"addr"`
+//			Token  string `json:"token"`
+//	   	Limit  int    `json:"limit"`
+//	  	Cursor string `json:"cursor"`
+//	   	OpTyps string `json:"op_types"`
+//		  }
 func (t *AssetOper) genSceneListDiffByAddrBody(param *xbase.SceneListDiffByAddrParam) (string, error) {
 	v := url.Values{}
 	v.Set("addr", param.Addr)
@@ -1236,4 +1254,307 @@ func (t *AssetOper) SceneListDiffByAddr(param *xbase.SceneListDiffByAddrParam) (
 	t.Logger.Trace("operate succ. [url: %s] [request_id: %s] [trace_id: %s]",
 		res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
 	return &resp, res, nil
+}
+
+// SceneHasAssetByAddrBody
+//
+//	type SceneHasAssetByAddrParam struct {
+//		Addr     string `json:"addr"`
+//		Token    string `json:"token"`
+//		AssetIds string `json:"asset_ids"`
+//	}
+func (t *AssetOper) genSceneHasAssetByAddrBody(param *xbase.SceneHasAssetByAddrParam) (string, error) {
+	v := url.Values{}
+	v.Set("addr", param.Addr)
+	v.Set("token", param.Token)
+	v.Set("asset_ids", param.AssetIds)
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) SceneHasAssetByAddr(param *xbase.SceneHasAssetByAddrParam) (*xbase.SceneHasAssetByAddrResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, _ := t.genSceneHasAssetByAddrBody(param)
+
+	res, err := t.Post(xbase.SceneHasAstByAddr, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. url: %s, err: %v", xbase.SceneHasAstByAddr, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.SceneHasAssetByAddrResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [addr: %s] [token: %s] [url: %s] [request_id: %s] [trace_id: %s]",
+		param.Addr, param.Token, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) SceneListAddr(uid string) (*xbase.SceneListAddrResp, *xbase.RequestRes, error) {
+	if err := xbase.UnionIdValid(uid); err != nil {
+		return nil, nil, err
+	}
+	signedUnionId, err := t.aesEncodeStr(uid)
+	if err != nil {
+		t.Logger.Warn("encode union id fail, union id: %s", uid)
+		return nil, nil, err
+	}
+	v := url.Values{}
+	v.Set("union_id", signedUnionId)
+	body := v.Encode()
+
+	res, err := t.Post(xbase.SceneListAddr, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. url: %s, err: %v", xbase.SceneListAddr, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.SceneListAddrResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [union_id: %s] [url: %s] [request_id: %s] [trace_id: %s]",
+		uid, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) BdBoxRegister(param *xbase.BdBoxRegisterParam) (*xbase.BdBoxRegisterResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	v := url.Values{}
+	signedOpenId, err := t.aesEncodeStr(param.OpenId)
+	if err != nil {
+		t.Logger.Warn("encode open id fail, open id: %s", param.OpenId)
+		return nil, nil, err
+	}
+	signedAppKey, err := t.aesEncodeStr(param.AppKey)
+	if err != nil {
+		t.Logger.Warn("encode app key fail, app key: %s", param.AppKey)
+		return nil, nil, err
+	}
+	v.Set("open_id", signedOpenId)
+	v.Set("app_key", signedAppKey)
+	body := v.Encode()
+
+	res, err := t.Post(xbase.DidApiRegister, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. url: %s, err: %v", xbase.DidApiRegister, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BdBoxRegisterResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	decodeMnem, err := t.aesDecodeStr(resp.Mnemonic)
+	if err != nil {
+		t.Logger.Warn("get resp succ but cannot decode mnemonic. [url: %s] [request_id: %s] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+		return &resp, res, err
+	}
+	resp.Mnemonic = decodeMnem
+
+	t.Logger.Trace("operate succ. [open_id: %s] [app_key: %s] [url: %s] [request_id: %s] [trace_id: %s]",
+		param.OpenId, param.AppKey, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) BdBoxBind(param *xbase.BdBoxBindParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	v := url.Values{}
+	signedOpenId, err := t.aesEncodeStr(param.OpenId)
+	if err != nil {
+		t.Logger.Warn("encode open id fail, open id: %s", param.OpenId)
+		return nil, nil, err
+	}
+	signedAppKey, err := t.aesEncodeStr(param.AppKey)
+	if err != nil {
+		t.Logger.Warn("encode app key fail, app key: %s", param.AppKey)
+		return nil, nil, err
+	}
+	signedMnem, err := t.aesEncodeStr(param.Mnemonic)
+	if err != nil {
+		t.Logger.Warn("encode mnemonic fail, mnemonic: %s", param.Mnemonic)
+		return nil, nil, err
+	}
+	v.Set("open_id", signedOpenId)
+	v.Set("app_key", signedAppKey)
+	v.Set("mnemonic", signedMnem)
+	body := v.Encode()
+
+	res, err := t.Post(xbase.DidApiBind, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. url: %s, err: %v", xbase.DidApiBind, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BaseResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [open_id: %s] [app_key: %s] [url: %s] [request_id: %s] [trace_id: %s]",
+		param.OpenId, param.AppKey, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) BindByUnionId(param *xbase.BindByUnionIdParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+
+	signedUnionId, err := t.aesEncodeStr(param.UnionId)
+	if err != nil {
+		t.Logger.Warn("encode union id fail, union id: %s", param.UnionId)
+		return nil, nil, err
+	}
+	signedMnem, err := t.aesEncodeStr(param.Mnemonic)
+	if err != nil {
+		t.Logger.Warn("encode mnemonic fail, mnemonic: %s", param.Mnemonic)
+		return nil, nil, err
+	}
+	v := url.Values{}
+	v.Set("union_id", signedUnionId)
+	v.Set("mnemonic", signedMnem)
+	body := v.Encode()
+
+	res, err := t.Post(xbase.DidApiBindByUid, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. url: %s, err: %v", xbase.DidApiBindByUid, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BaseResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [union_id: %s] [url: %s] [request_id: %s] [trace_id: %s]",
+		param.UnionId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) GetAddrByUnionId(uid string) (*xbase.GetAddrByUnionIdResp, *xbase.RequestRes, error) {
+	if err := xbase.UnionIdValid(uid); err != nil {
+		return nil, nil, err
+	}
+	signedUnionId, err := t.aesEncodeStr(uid)
+	if err != nil {
+		t.Logger.Warn("encode union id fail, union id: %s", uid)
+		return nil, nil, err
+	}
+	v := url.Values{}
+	v.Set("union_id", signedUnionId)
+	body := v.Encode()
+
+	res, err := t.Post(xbase.DidApiGetAddrByUid, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. url: %s, err: %v", xbase.DidApiGetAddrByUid, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post req resp not 200.[http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.GetAddrByUnionIdResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed.err:%v [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			err, res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [union_id: %s] [url: %s] [request_id: %s] [trace_id: %s]",
+		uid, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) aesEncodeStr(str string) (string, error) {
+	return utils.AesEncode(str, t.Cfg.Credentials.SecretAccessKey)
+}
+
+func (t *AssetOper) aesDecodeStr(str string) (string, error) {
+	return utils.AesDecode(str, t.Cfg.Credentials.SecretAccessKey)
 }

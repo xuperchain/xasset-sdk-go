@@ -13,6 +13,9 @@ const (
 	TestAK       = "xxx"
 	TestSK       = "xxx"
 	TestEndpoint = "http://120.48.16.137:8360"
+	OpenId       = "xxx"
+	AppKey       = "xxx"
+	UnionId      = "xxx"
 )
 
 var TestAccount, _ = auth.NewXchainEcdsaAccount(auth.MnemStrgthStrong, auth.MnemLangCN)
