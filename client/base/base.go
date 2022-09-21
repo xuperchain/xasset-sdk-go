@@ -222,7 +222,7 @@ func UnionIdValid(uid string) error {
 }
 
 func OpenIdValid(oid string) error {
-	if oid == ""{
+	if oid == "" {
 		return ErrOpenIdInvalid
 	}
 	return nil
@@ -242,9 +242,7 @@ func MnemonicValid(mnem string) error {
 	return nil
 }
 
-
-
-/////// General Client ///////
+// ///// General Client ///////
 type RequestRes struct {
 	HttpCode int         `json:"http_code"`
 	ReqUrl   string      `json:"req_url"`

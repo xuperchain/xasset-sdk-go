@@ -7,7 +7,6 @@ import (
 	"github.com/xuperchain/xasset-sdk-go/common/config"
 )
 
-
 const (
 	// 需要修改为正确的配置
 	TestAppId    = 0

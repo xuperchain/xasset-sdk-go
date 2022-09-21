@@ -355,19 +355,13 @@ func TestXasset(t *testing.T) {
 func TestSceneHasAsset(t *testing.T) {
 	handle, _ := NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
 
-	signedUid, err := utils.AesEncode(base.UnionId, base.TestSK)
+	resp1, _, err := handle.SceneListAddr(base.UnionId)
 	if err != nil {
-		t.Errorf("fail to sign UnionId")
-		return
-	}
-	resp1, _, err := handle.SceneListAddr(signedUid)
-	if err != nil {
-		t.Errorf("scene list addr error, err: %v, union_id: %s", err, signedUid)
+		t.Errorf("scene list addr error, err: %v, union_id: %s", err, base.UnionId)
 		return
 	}
 
 	fmt.Println(len(resp1.List))
-
 	if len(resp1.List) == 0 {
 		return
 	}
@@ -388,20 +382,9 @@ func TestSceneHasAsset(t *testing.T) {
 func TestXassetDid(t *testing.T) {
 	handle, _ := NewAssetOperCli(base.TestGetXassetConfig(), &base.TestLogger{})
 
-	signedOpenId, err := utils.AesEncode(base.OpenId, base.TestSK)
-	if err != nil {
-		t.Errorf("fail to sign OpenId")
-		return
-	}
-	signedAppKey, err := utils.AesEncode(base.AppKey, base.TestSK)
-	if err != nil {
-		t.Errorf("fail to sign App Key")
-		return
-	}
-
 	param1 := &base.BdBoxRegisterParam{
-		OpenId: signedOpenId,
-		AppKey: signedAppKey,
+		OpenId: base.OpenId,
+		AppKey: base.AppKey,
 	}
 
 	resp1, _, err := handle.BdBoxRegister(param1)
@@ -412,11 +395,10 @@ func TestXassetDid(t *testing.T) {
 
 	fmt.Println(resp1.Address, resp1.IsNew)
 
-	signedMnem := resp1.Mnemonic
 	param2 := &base.BdBoxBindParam{
-		OpenId: signedOpenId,
-		AppKey: signedAppKey,
-		Mnemonic: signedMnem,
+		OpenId:   base.OpenId,
+		AppKey:   base.AppKey,
+		Mnemonic: resp1.Mnemonic,
 	}
 	_, _, err = handle.BdBoxBind(param2)
 	if err != nil {
@@ -424,14 +406,9 @@ func TestXassetDid(t *testing.T) {
 		return
 	}
 
-	signedUid, err := utils.AesEncode(base.UnionId, base.TestSK)
-	if err != nil {
-		t.Errorf("fail to sign UnionId")
-		return
-	}
 	param3 := &base.BindByUnionIdParam{
-		UnionId: signedUid,
-		Mnemonic: signedMnem,
+		UnionId:  base.UnionId,
+		Mnemonic: resp1.Mnemonic,
 	}
 	_, _, err = handle.BindByUnionId(param3)
 	if err != nil {
@@ -439,9 +416,9 @@ func TestXassetDid(t *testing.T) {
 		return
 	}
 
-	resp2, _, err := handle.GetAddrByUnionId(signedUid)
+	resp2, _, err := handle.GetAddrByUnionId(base.UnionId)
 	if err != nil {
-		t.Errorf("get addr by union id error, err: %v, union id: %s", err, signedUid)
+		t.Errorf("get addr by union id error, err: %v, union id: %s", err, base.UnionId)
 		return
 	}
 	fmt.Println(resp2.Address)

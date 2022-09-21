@@ -79,8 +79,10 @@ import (
     github.com/xuperchain/xasset-sdk-go/utils
 )
 
-// 使用sk对union_id加密
-signedUnionId, _ := utils.AesEncode(unionId, sk)
+// 使用sk对str加密/解密
+encodeStr, _ := utils.AesEncode(unionId, sk)
+decodeStr, _ := utils.AesDecode(unionId, sk)
 
-// 部分应用场景调用需要先加密后传输，请参考client/xasset下的单元测试
+// 需要先加密后传输的应用场景在api中已经实现了该加密过程，不需要调用该函数
+// POST /xasset/did/v1/bdboxregister返回的mnemonic已经实现了解密
 ```

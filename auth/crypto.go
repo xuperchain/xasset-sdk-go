@@ -1,13 +1,13 @@
 package auth
 
 import (
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/ecdsa"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
 
 	"github.com/xuperchain/crypto/core/account"
 	"github.com/xuperchain/crypto/core/hash"
@@ -184,14 +184,6 @@ func AesDecrypt(crypted, key []byte) ([]byte, error) {
 	// 去掉填充字符
 	origData = PKCS7UnPadding(origData)
 	return origData, nil
-}
-
-func Base64Encode(content []byte) string {
-	return base64.StdEncoding.EncodeToString(content)
-}
-
-func Base64Decode(content string) ([]byte, error) {
-	return base64.StdEncoding.DecodeString(content)
 }
 
 func Base64UrlEncode(content []byte) string {
