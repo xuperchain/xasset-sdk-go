@@ -86,6 +86,7 @@ var (
 	ErrOpenIdInvalid     = errors.New("open id invalid")
 	ErrAppKeyInvalid     = errors.New("app key invalid")
 	ErrMnemInvalid       = errors.New("mnemonic invalid")
+	ErrNameInvalid       = errors.New("target parameter invalid, empty string")
 )
 
 type ThumbMap struct {
