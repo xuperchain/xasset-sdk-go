@@ -1000,7 +1000,7 @@ func (t *CreateOrAlterActParam) CreateValid() error {
 type BaseActParam struct {
 	ActId  int64 `json:"act_id"`
 	OpType int   `json:"op_type"`
-	IsBox int `json:"is_box"`
+	IsBox  int   `json:"is_box"`
 }
 
 func (t *BaseActParam) Valid() error {
