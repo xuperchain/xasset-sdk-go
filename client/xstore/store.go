@@ -1,4 +1,4 @@
-package store
+package xstore
 
 import (
 	"encoding/json"
