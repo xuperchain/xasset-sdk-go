@@ -30,10 +30,10 @@ const (
 	SceneListAddr        = "/xasset/scene/v1/listaddr"
 	SceneHasAstByAddr    = "/xasset/scene/v1/hasastbyaddr"
 
-	DidApiRegister       = "/xasset/did/v1/bdboxregister"
-	DidApiBind           = "/xasset/did/v1/bdboxbind"
-	DidApiBindByUid      = "/xasset/did/v1/bindbyunionid"
-	DidApiGetAddrByUid   = "/xasset/did/v1/getaddrbyunionid"
+	DidApiRegister     = "/xasset/did/v1/bdboxregister"
+	DidApiBind         = "/xasset/did/v1/bdboxbind"
+	DidApiBindByUid    = "/xasset/did/v1/bindbyunionid"
+	DidApiGetAddrByUid = "/xasset/did/v1/getaddrbyunionid"
 )
 
 /////// Gen Token /////////
@@ -788,6 +788,7 @@ type SceneHasAssetByAddrParam struct {
 	Token    string `json:"token"`
 	AssetIds string `json:"asset_ids"`
 }
+
 func (t *SceneHasAssetByAddrParam) Valid() error {
 	if t == nil {
 		return ErrNilPointer
@@ -795,7 +796,7 @@ func (t *SceneHasAssetByAddrParam) Valid() error {
 	if err := AddrValid(t.Addr); err != nil {
 		return err
 	}
-	if err := DescValid(t.Token); err!= nil {
+	if err := DescValid(t.Token); err != nil {
 		return err
 	}
 	if t.AssetIds == "" {
@@ -803,9 +804,10 @@ func (t *SceneHasAssetByAddrParam) Valid() error {
 	}
 	return nil
 }
+
 type SceneHasAssetByAddrResp struct {
 	BaseResp
-	Result  map[string]int `json:"result"`
+	Result map[string]int `json:"result"`
 }
 
 //////////// Scene listaddr /////////////////////
@@ -816,7 +818,7 @@ type AddrGroupToken struct {
 }
 type SceneListAddrResp struct {
 	BaseResp
-	List  []*AddrGroupToken `json:"list"`
+	List []*AddrGroupToken `json:"list"`
 }
 
 //////////// Bdbox register ////////////////////
@@ -824,6 +826,7 @@ type BdBoxRegisterParam struct {
 	OpenId string `json:"open_id"`
 	AppKey string `json:"app_key"`
 }
+
 func (t *BdBoxRegisterParam) Valid() error {
 	if t == nil {
 		return ErrNilPointer
@@ -836,6 +839,7 @@ func (t *BdBoxRegisterParam) Valid() error {
 	}
 	return nil
 }
+
 type BdBoxRegisterResp struct {
 	BaseResp
 	Address  string `json:"addr"`
@@ -845,10 +849,11 @@ type BdBoxRegisterResp struct {
 
 ///////////// Bdbox bind ////////////////////////
 type BdBoxBindParam struct {
-	OpenId    string `json:"open_id"`
-	AppKey    string `json:"app_key"`
-	Mnemonic  string `json:"mnemonic"`
+	OpenId   string `json:"open_id"`
+	AppKey   string `json:"app_key"`
+	Mnemonic string `json:"mnemonic"`
 }
+
 func (t *BdBoxBindParam) Valid() error {
 	if t == nil {
 		return ErrNilPointer
@@ -867,9 +872,10 @@ func (t *BdBoxBindParam) Valid() error {
 
 ///////////// Bind by union id /////////////////
 type BindByUnionIdParam struct {
-	UnionId   string  `json:"union_id"`
-	Mnemonic  string  `json:"mnemonic"`
+	UnionId  string `json:"union_id"`
+	Mnemonic string `json:"mnemonic"`
 }
+
 func (t *BindByUnionIdParam) Valid() error {
 	if t == nil {
 		return ErrNilPointer
@@ -886,5 +892,5 @@ func (t *BindByUnionIdParam) Valid() error {
 //////////// Get addr by union id /////////////
 type GetAddrByUnionIdResp struct {
 	BaseResp
-	Address  string  `json:"address"`
+	Address string `json:"address"`
 }
