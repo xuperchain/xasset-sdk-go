@@ -31,7 +31,7 @@ func (t *CreateOrAlterStoreParam) CreateValid() error {
 	if t == nil {
 		return ErrNilPointer
 	}
-	if t.StoreId < 1 || t.Name == "" || t.Logo == "" || t.Cover == "" || t.ShortDesc == "" {
+	if t.StoreId < 1 || t.Name == "" || t.Logo == "" || t.Cover == "" {
 		return ErrParamInvalid
 	}
 	return nil
@@ -95,7 +95,7 @@ func (t *CreateOrAlterActParam) CreateValid() error {
 	if t == nil {
 		return ErrNilPointer
 	}
-	if t.StoreId < 1 || t.ActId < 1 || t.JumpLink == "" || t.Issuer == "" || t.ActName == "" || t.ShortDesc == "" || t.Thumb == "" || t.ImgDesc == "" || t.Start < 1 || t.End < 1 || t.Start > t.End {
+	if t.StoreId < 1 || t.ActId < 1 || t.Issuer == "" || t.ActName == "" || t.Thumb == "" || t.Start < 1 || t.End < 1 || t.Start > t.End {
 		return ErrParamInvalid
 	}
 	return nil
