@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/url"
 
+	xbase "github.com/xuperchain/xasset-sdk-go/client/base"
 	"github.com/xuperchain/xasset-sdk-go/common/config"
 	"github.com/xuperchain/xasset-sdk-go/common/logs"
-	xbase "github.com/xuperchain/xasset-sdk-go/client/base"
 )
 
 type StoreOper struct {
@@ -33,6 +33,7 @@ func (t *StoreOper) genCreateOrAlterStoreBody(param *xbase.CreateOrAlterStorePar
 	v.Set("short_desc", param.ShortDesc)
 	v.Set("weight", fmt.Sprintf("%d", param.Weight))
 	v.Set("ext_info", param.ExtInfo)
+	v.Set("wechat", param.Wechat)
 	body := v.Encode()
 	return body, nil
 }
@@ -287,7 +288,7 @@ func (t *StoreOper) AlterAct(param *xbase.CreateOrAlterActParam) (*xbase.BaseRes
 	return &resp, res, nil
 }
 
-func (t *StoreOper) genPubActBody(param *xbase.BaseActParam) (string, error) {
+func (t *StoreOper) genBaseActBody(param *xbase.BaseActParam) (string, error) {
 	v := url.Values{}
 	v.Set("act_id", fmt.Sprintf("%d", param.ActId))
 	v.Set("op_type", fmt.Sprintf("%d", param.OpType))
@@ -295,12 +296,138 @@ func (t *StoreOper) genPubActBody(param *xbase.BaseActParam) (string, error) {
 	return body, nil
 }
 
+func (t *StoreOper) RemoveAct(param *xbase.BaseActParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, xbase.ErrParamInvalid
+	}
+
+	body, err := t.genBaseActBody(param)
+	if err != nil {
+		t.Logger.Warn("fail to generate value for remove act, err: %v, param: %+v", err, *param)
+		return nil, nil, err
+	}
+	res, err := t.Post(xbase.StoreApiRemoveAct, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed.err:%v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BaseResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [act_id: %v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param.ActId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *StoreOper) QueryAct(param *xbase.BaseActParam) (*xbase.QueryActResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, xbase.ErrParamInvalid
+	}
+
+	body, err := t.genBaseActBody(param)
+	if err != nil {
+		t.Logger.Warn("fail to generate value for query act, err: %v, param: %+v", err, *param)
+		return nil, nil, err
+	}
+	res, err := t.Post(xbase.StoreApiQueryAct, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed.err:%v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.QueryActResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [act_id: %v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param.ActId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *StoreOper) genListActBody(param *xbase.ListActParam) (string, error) {
+	v := url.Values{}
+	v.Set("store_id", fmt.Sprintf("%d", param.StoreId))
+	v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	v.Set("cursor", param.Cursor)
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *StoreOper) ListAct(param *xbase.ListActParam) (*xbase.ListActResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, xbase.ErrParamInvalid
+	}
+
+	body, err := t.genListActBody(param)
+	if err != nil {
+		t.Logger.Warn("fail to generate value for list act, err: %v, param: %+v", err, *param)
+		return nil, nil, err
+	}
+	res, err := t.Post(xbase.StoreApiListAct, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed.err:%v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.ListActResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [store_id: %v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param.StoreId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
 func (t *StoreOper) PubAct(param *xbase.BaseActParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
 	if err := param.Valid(); err != nil {
 		return nil, nil, xbase.ErrParamInvalid
 	}
 
-	body, err := t.genPubActBody(param)
+	body, err := t.genBaseActBody(param)
 	if err != nil {
 		t.Logger.Warn("fail to generate value for pub act, err: %v, param: %+v", err, *param)
 		return nil, nil, err
