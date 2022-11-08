@@ -41,7 +41,6 @@ const (
 	HubDetailOrder  = "/xasset/trade/v1/order_detail"
 	HubEditOrder    = "/xasset/trade/v1/edit_order"
 	HubListOrder    = "/xasset/trade/v1/order_list"
-	HubKnockOrder   = "/xasset/trade/v1/knock_order"
 )
 
 /////// Gen Token /////////
@@ -962,7 +961,7 @@ func (p *HubCreateOrderParam) Valid() error {
 		if p.Uid <= 0 {
 			return fmt.Errorf("baidu cashiers need passport id")
 		}
-		// 使用百度收银台必须提供加密串
+		// 使用百度收银台H5支付必须提供加密串
 		if p.Code == CodeBaiduH5 && p.SignedAuth == "" {
 			return fmt.Errorf("invalid auth")
 		}
