@@ -744,3 +744,242 @@ func (t *StoreOper) ListActAst(param *xbase.BaseActParam) (*xbase.ListActAstResp
 		param.ActId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
 	return &resp, res, nil
 }
+
+func (t *StoreOper) genCreateOrderBody(param *xbase.HubCreateOrderParam) (string, error) {
+	v := url.Values{}
+	v.Set("code", fmt.Sprintf("%d", param.Code))
+	v.Set("order_type", fmt.Sprintf("%d", param.OrderType))
+	v.Set("executor", param.ExecutorAPI)
+	v.Set("executor_data", param.ExecutorData)
+	v.Set("timestamp", fmt.Sprintf("%d", param.Timestamp))
+	v.Set("time_expire", fmt.Sprintf("%d", param.TimeExpire))
+	v.Set("profit_sharing", fmt.Sprintf("%d", param.ProfitSharing))
+	v.Set("uid", fmt.Sprintf("%d", param.Uid))
+	v.Set("creator_details", param.Details)
+	v.Set("app_id", fmt.Sprintf("%d", param.AppId))
+	v.Set("act_id", fmt.Sprintf("%d", param.ActId))
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("buyer_addr", param.BuyerAddr)
+	v.Set("seller_addr", param.SellerAddr)
+	v.Set("client_type", fmt.Sprintf("%d", param.ClientType))
+	v.Set("chan", fmt.Sprintf("%d", param.Chan))
+	v.Set("scene", fmt.Sprintf("%d", param.Scene))
+	v.Set("signed_auth", param.SignedAuth)
+
+	return v.Encode(), nil
+}
+
+// CreateOrder creates orders.
+func (t *StoreOper) CreateOrder(param *xbase.HubCreateOrderParam) (*xbase.HubCreateResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, err := t.genCreateOrderBody(param)
+	if err != nil {
+		t.Logger.Warn("fail to generate value for create order, err: %v, param: %+v", err, *param)
+		return nil, nil, err
+	}
+	res, err := t.Post(xbase.HubCreateOrder, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.HubCreateOrder, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.HubCreateResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [param: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// ConfirmOrder confirms orders.
+func (t *StoreOper) ConfirmOrder(param *xbase.HubConfirmH5OrderParam) (*xbase.HubCreateResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	v := url.Values{}
+	v.Set("code", fmt.Sprintf("%d", param.Code))
+	v.Set("order_type", fmt.Sprintf("%d", param.OrderType))
+	v.Set("app_id", fmt.Sprintf("%d", param.AppId))
+	v.Set("oid", fmt.Sprintf("%d", param.Oid))
+	v.Set("client_type", fmt.Sprintf("%d", param.ClientType))
+	v.Set("signed_auth", param.SignAuth)
+	body := v.Encode()
+	res, err := t.Post(xbase.HubConfirmOrder, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.HubConfirmOrder, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.HubCreateResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [param: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// QueryOrderDetail gets order info.
+func (t *StoreOper) QueryOrderDetail(param *xbase.HubOrderDetailParam) (*xbase.HubOrderDetailResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	v := url.Values{}
+	v.Set("app_id", fmt.Sprintf("%d", param.AppId))
+	v.Set("oid", fmt.Sprintf("%d", param.Oid))
+	body := v.Encode()
+	res, err := t.Post(xbase.HubDetailOrder, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.HubDetailOrder, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.HubOrderDetailResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [param: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *StoreOper) genEditOrderBody(param *xbase.HubEditOrderParam) (string, error) {
+	v := url.Values{}
+	v.Set("app_id", fmt.Sprintf("%d", param.AppId))
+	v.Set("oid", fmt.Sprintf("%d", param.Oid))
+	v.Set("status", fmt.Sprintf("%d", param.Status))
+	v.Set("pay_channel", fmt.Sprintf("%d", param.PayChannel))
+	v.Set("third_oid", param.ThirdOid)
+	v.Set("pay_info", param.PayInfo)
+	v.Set("pay_time", fmt.Sprintf("%d", param.PayTime))
+	v.Set("close_time", fmt.Sprintf("%d", param.CloseTime))
+	v.Set("close_reason", param.CloseReason)
+
+	return v.Encode(), nil
+}
+
+// EditOrder edits order info.
+func (t *StoreOper) EditOrder(param *xbase.HubEditOrderParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	body, err := t.genEditOrderBody(param)
+	if err != nil {
+		t.Logger.Warn("fail to generate value for edit order, err: %v, param: %+v", err, *param)
+		return nil, nil, err
+	}
+	res, err := t.Post(xbase.HubEditOrder, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.HubEditOrder, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BaseResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [param: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// QueryOrderList gets order list by address.
+func (t *StoreOper) QueryOrderList(param *xbase.HubListOrderParam) (*xbase.HubListOrderResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+	v := url.Values{}
+	v.Set("app_id", fmt.Sprintf("%d", param.AppId))
+	v.Set("address", param.Addr)
+	v.Set("status", fmt.Sprintf("%d", param.Status))
+	v.Set("cursor", param.Cursor)
+	v.Set("limit", fmt.Sprintf("%d", param.Limit))
+
+	body := v.Encode()
+	res, err := t.Post(xbase.HubListOrder, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.HubListOrder, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.HubListOrderResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [param: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}

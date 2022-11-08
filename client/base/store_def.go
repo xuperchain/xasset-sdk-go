@@ -1,5 +1,7 @@
 package base
 
+import "fmt"
+
 const (
 	StoreApiCreate           = "/xasset/store/v1/create"
 	StoreApiAlter            = "/xasset/store/v1/alter"
@@ -17,6 +19,12 @@ const (
 	StoreApiCancelAstByActId = "/xasset/store/v1/cancelastbyact"
 	StoreApiQueryAst         = "/xasset/store/v1/queryast"
 	StoreApiListAst          = "/xasset/store/v1/listast"
+
+	HubCreateOrder  = "/xasset/trade/v1/create_order"
+	HubConfirmOrder = "/xasset/trade/v1/confirm_order"
+	HubDetailOrder  = "/xasset/trade/v1/order_detail"
+	HubEditOrder    = "/xasset/trade/v1/edit_order"
+	HubListOrder    = "/xasset/trade/v1/order_list"
 )
 
 /////// Create Store /////////
@@ -262,4 +270,252 @@ type QueryActAstMeta struct {
 	ExtInfo       string   `json:"ext_info"`
 	Ctime         int64    `json:"ctime"`
 	Mtime         int64    `json:"mtime"`
+}
+
+////////////// Trade Orders API /////////////
+const (
+	// ---------- Code Enum -----------
+	CodeBaiduSmartApp = 1001 // 百度收银台安卓端
+	CodeBaiduIOS      = 1002 // 百度收银台IOS端
+	CodeBaiduH5       = 1003 // 百度收银台H5
+)
+
+var (
+	BaiduCashierCode = map[int]interface{}{
+		CodeBaiduSmartApp: struct{}{},
+		CodeBaiduIOS:      struct{}{},
+		CodeBaiduH5:       struct{}{},
+	}
+)
+
+//////////// Create Orders ///////////////
+type HubCreateOrderParam struct {
+	// 标记支付平台, 1001: 百度收银台-小程序 1002: 百度收银台-IOS 1003: 百度收银台-H5  2001: 第三方微信支付
+	Code int `json:"code"`
+	// 订单类型, 1:PGC商城订单
+	OrderType int `json:"order_type"`
+	// 使用百度收银台，且有回调通知的业务方服务请填写回调地址，支付成功后，执行器回调接口，应用方需保证接口幂等
+	ExecutorAPI string `json:"executor"`
+	// object, 使用百度收银台时，支付成功后，执行器回调时携带参数
+	ExecutorData string `json:"executor_data"`
+	// 下单时间，建议填写now time
+	Timestamp int64 `json:"timestamp"`
+	// 订单失效时间，针对使用百度收银台的订单有效
+	// 当TimeExpire为0时，表示永久不过期
+	// TimeExpire为秒偏移量，以create_time时间为准偏移
+	TimeExpire int64 `json:"time_expire"`
+	// 是否需要分账，0: 不分账，1: 分账
+	ProfitSharing int `json:"profit_sharing"`
+	//	用户标识，使用百度收银台时，该标识必须为baiduUID
+	Uid int64 `json:"uid"`
+	// object，其余支付参数的序列化值，标记剩余的非通用参数
+	Details    string `json:"creator_details"`
+	AppId      int64  `json:"app_id"`
+	ActId      int64  `json:"act_id"`
+	AssetId    int64  `json:"asset_id"`
+	BuyerAddr  string `json:"buyer_addr"`
+	SellerAddr string `json:"seller_addr"`
+	ClientType int    `json:"client_type"`
+	Chan       int64  `json:"chan"`
+	Scene      int64  `json:"scene"`
+	SignedAuth string `json:"signed_auth"`
+}
+
+func (p *HubCreateOrderParam) Valid() error {
+	if p.SellerAddr == "" {
+		return fmt.Errorf("seller_addr empty")
+	}
+
+	// 使用百度收银台请务必携带uid
+	if _, ok := BaiduCashierCode[p.Code]; ok {
+		if p.Uid <= 0 {
+			return fmt.Errorf("baidu cashiers need passport id")
+		}
+		// 使用百度收银台必须提供加密串
+		if p.Code == CodeBaiduH5 && p.SignedAuth == "" {
+			return fmt.Errorf("invalid auth")
+		}
+	}
+
+	if p.AssetId <= 0 {
+		return fmt.Errorf("asset_id invalid, must be a positive integer")
+	}
+	if p.AppId <= 0 {
+		return fmt.Errorf("app_id invalid, must be a positive integer")
+	}
+	return nil
+}
+
+type HubCreateResp struct {
+	BaseResp
+	Data struct {
+		Code      int    `json:"code"`
+		OrderType int    `json:"order_type"`
+		Details   string `json:"details"`
+		CTime     int64  `json:"ctime"`
+	} `json:"data"`
+}
+
+type HubConfirmH5OrderParam struct {
+	Code       int    `json:"code"`
+	OrderType  int    `json:"order_type"`
+	AppId      int64  `json:"app_id"`
+	Oid        int64  `json:"oid"`
+	ClientType int    `json:"client_type"`
+	SignAuth   string `json:"signed_auth"`
+}
+
+func (p *HubConfirmH5OrderParam) Valid() error {
+	if p.Oid < 0 {
+		return fmt.Errorf("oid empty")
+	}
+	if p.ClientType < 0 {
+		return fmt.Errorf("client_type empty")
+	}
+	if p.AppId < 0 {
+		return fmt.Errorf("app_id empty")
+	}
+	return nil
+}
+
+type HubOrderDetailParam struct {
+	AppId int64 `json:"app_id"`
+	Oid   int64 `json:"oid"`
+}
+
+func (p *HubOrderDetailParam) Valid() error {
+	if p.Oid < 0 || p.AppId < 0 {
+		return fmt.Errorf("value empty")
+	}
+	return nil
+}
+
+type HubOrderDetailResp struct {
+	BaseResp
+	Data struct {
+		HubOrderDetail
+	} `json:"data"`
+}
+
+type HubOrderDetail struct {
+	Code        int      `json:"code"`
+	OrderType   int      `json:"order_type"`
+	Oid         int64    `json:"oid"`
+	ActId       int64    `json:"act_id"`
+	AssetId     int64    `json:"asset_id"`
+	ShardId     int64    `json:"shard_id"`
+	AssetCate   int      `json:"asset_cate"`
+	BuyerAddr   string   `json:"buyer_addr"`
+	Status      int      `json:"status"`
+	Title       string   `json:"title"`
+	Thumb       []string `json:"thumb"`
+	OriginPrice int      `json:"origin_price"`
+	PayPrice    int      `json:"pay_price"`
+	TimeExpire  int64    `json:"time_expire"`
+	PayTime     int64    `json:"pay_time"`
+	CloseTime   int64    `json:"close_time"`
+	Ctime       int64    `json:"ctime"`
+}
+
+type HubEditOrderParam struct {
+	AppId       int64  `json:"app_id"`
+	Oid         int64  `json:"oid"`
+	Status      int    `json:"status"`
+	PayChannel  int    `json:"pay_channel"`
+	ThirdOid    string `json:"third_oid"`
+	PayInfo     string `json:"pay_info"`
+	PayTime     int64  `json:"pay_time"`
+	CloseTime   int64  `json:"close_time"`
+	CloseReason string `json:"close_reason"`
+}
+
+func (p *HubEditOrderParam) Valid() error {
+	if p.AppId < 0 {
+		return fmt.Errorf("app_id invalid")
+	}
+	if p.Oid < 0 {
+		return fmt.Errorf("oid invalid")
+	}
+	return nil
+}
+
+type HubListOrderParam struct {
+	AppId  int64  `json:"app_id"`
+	Addr   string `json:"address"`
+	Status int    `json:"status"`
+	Cursor string `json:"cursor"`
+	Limit  int    `json:"limit"`
+}
+
+func (p *HubListOrderParam) Valid() error {
+	if p.AppId < 0 {
+		return fmt.Errorf("app_id invalid")
+	}
+	if p.Addr == "" {
+		return fmt.Errorf("addr invalid")
+	}
+	if p.Status < 0 {
+		return fmt.Errorf("addr invalid")
+	}
+	if p.Limit < 0 {
+		return fmt.Errorf("cursor limit invalid")
+	}
+
+	return nil
+}
+
+type HubListOrderResp struct {
+	BaseResp
+	Data struct {
+		List    []HubOrderDetail `json:"list"`
+		Cursor  string           `json:"cursor"`
+		HasMore int              `json:"has_more"`
+	} `json:"data"`
+}
+
+type HubKnockOrderParam struct {
+	Code      int   `json:"code"`
+	OrderType int   `json:"order_type"`
+	AppId     int64 `json:"app_id"`
+	Oid       int64 `json:"oid"`
+}
+
+func (p *HubKnockOrderParam) Valid() error {
+	if p.AppId <= 0 {
+		return fmt.Errorf("app_id invalid")
+	}
+	if p.Oid <= 0 {
+		return fmt.Errorf("oid invalid")
+	}
+	return nil
+}
+
+type HubKnockOrderResp struct {
+	BaseResp
+	Data struct {
+		Code    int                 `json:"code"`
+		Status  int                 `json:"status"`
+		PayInfo *OwnedMallOrderItem `json:"pay_info"`
+		AssetId int64               `json:"asset_id"`
+		ShardId int64               `json:"shard_id"`
+	} `json:"data"`
+}
+
+type OwnedMallOrderItem struct {
+	DealId          string `json:"dealId"`
+	AppKey          string `json:"appKey"`
+	TotalAmount     string `json:"totalAmount"`
+	TpOrderId       string `json:"tpOrderId"`
+	NotifyUrl       string `json:"notifyUrl"`
+	RsaSign         string `json:"rsaSign"`
+	SignFieldsRange string `json:"signFieldsRange"`
+	CTime           int64  `json:"ctime"`
+}
+
+type H5OrderItem struct {
+	TpOrderId    int64  `json:"oid"`
+	OrderInfoUrl string `json:"order_url"`
+	H5PayInfo    string `json:"pay_info"`
+	TotalAmount  string `json:"total_amount"`
+	CTime        int64  `json:"ctime"`
 }
