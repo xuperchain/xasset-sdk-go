@@ -306,8 +306,6 @@ type HubCreateOrderParam struct {
 	TimeExpire int64 `json:"time_expire"`
 	// 是否需要分账，0: 不分账，1: 分账
 	ProfitSharing int `json:"profit_sharing"`
-	//	用户标识，使用百度收银台时，该标识为加密串
-	Uk int64 `json:"uk"`
 	// object，其余支付参数的序列化值，标记剩余的非通用参数
 	Details    string `json:"creator_details"`
 	ActId      int64  `json:"act_id"`
@@ -324,13 +322,6 @@ func (p *HubCreateOrderParam) Valid() error {
 		return fmt.Errorf("seller_addr empty")
 	}
 
-	// 使用百度收银台请务必携带uk
-	if _, ok := BaiduCashierCode[p.Code]; ok {
-		if p.Uk <= 0 {
-			return fmt.Errorf("baidu cashiers need secret passport id")
-		}
-	}
-
 	if p.AssetId <= 0 {
 		return fmt.Errorf("asset_id invalid, must be a positive integer")
 	}
@@ -339,12 +330,14 @@ func (p *HubCreateOrderParam) Valid() error {
 
 type HubCreateResp struct {
 	BaseResp
-	Data struct {
-		Code      int    `json:"code"`
-		OrderType int    `json:"order_type"`
-		Details   string `json:"details"`
-		CTime     int64  `json:"ctime"`
-	} `json:"data"`
+	Data HubCreateData `json:"data"`
+}
+
+type HubCreateData struct {
+	Code      int    `json:"code"`
+	OrderType int    `json:"order_type"`
+	Details   string `json:"details"`
+	CTime     int64  `json:"ctime"`
 }
 
 type HubConfirmH5OrderParam struct {
@@ -377,9 +370,7 @@ func (p *HubOrderDetailParam) Valid() error {
 
 type HubOrderDetailResp struct {
 	BaseResp
-	Data struct {
-		HubOrderDetail
-	} `json:"data"`
+	Data HubOrderDetail `json:"data"`
 }
 
 type HubOrderDetail struct {
@@ -443,9 +434,11 @@ func (p *HubListOrderParam) Valid() error {
 
 type HubListOrderResp struct {
 	BaseResp
-	Data struct {
-		List    []HubOrderDetail `json:"list"`
-		Cursor  string           `json:"cursor"`
-		HasMore int              `json:"has_more"`
-	} `json:"data"`
+	Data HubListOrderData `json:"data"`
+}
+
+type HubListOrderData struct {
+	List    []HubOrderDetail `json:"list"`
+	Cursor  string           `json:"cursor"`
+	HasMore int              `json:"has_more"`
 }

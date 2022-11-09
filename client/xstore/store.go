@@ -749,19 +749,29 @@ func (t *StoreOper) ListActAst(param *xbase.BaseActParam) (*xbase.ListActAstResp
 }
 
 // CreateOrder creates orders.
-func (t *StoreOper) CreateOrder(param *xbase.HubCreateOrderParam, auth string) (*xbase.HubCreateResp, *xbase.RequestRes, error) {
+func (t *StoreOper) CreateOrder(param *xbase.HubCreateOrderParam, uid int64, auth string) (*xbase.HubCreateResp, *xbase.RequestRes, error) {
 	if err := param.Valid(); err != nil {
-		return nil, nil, err
+		return nil, nil, xbase.ErrParamInvalid
 	}
-	// 使用百度收银台必须提供鉴权串
+	// 使用百度收银台H5支付组件请务必携带鉴权串
 	if param.Code == xbase.CodeBaiduH5 && auth == "" {
-		return nil, nil, fmt.Errorf("invalid auth")
+		return nil, nil, xbase.ErrParamInvalid
 	}
+	// 使用百度收银台请务必携带uk
+	if _, ok := xbase.BaiduCashierCode[param.Code]; ok {
+		if uid <= 0 {
+			return nil, nil, xbase.ErrParamInvalid
+		}
+	}
+
 	secretAuth, err := t.GenSecretData(auth)
 	if err != nil {
 		return nil, nil, err
 	}
-
+	uk, err := t.GenSecretData(fmt.Sprintf("%d", uid))
+	if err != nil {
+		return nil, nil, err
+	}
 	v := url.Values{}
 	v.Set("code", fmt.Sprintf("%d", param.Code))
 	v.Set("order_type", fmt.Sprintf("%d", param.OrderType))
@@ -770,7 +780,7 @@ func (t *StoreOper) CreateOrder(param *xbase.HubCreateOrderParam, auth string) (
 	v.Set("timestamp", fmt.Sprintf("%d", param.Timestamp))
 	v.Set("time_expire", fmt.Sprintf("%d", param.TimeExpire))
 	v.Set("profit_sharing", fmt.Sprintf("%d", param.ProfitSharing))
-	v.Set("uk", fmt.Sprintf("%d", param.Uk))
+	v.Set("uk", uk)
 	v.Set("creator_details", param.Details)
 	v.Set("act_id", fmt.Sprintf("%d", param.ActId))
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
@@ -814,7 +824,7 @@ func (t *StoreOper) CreateOrder(param *xbase.HubCreateOrderParam, auth string) (
 // ConfirmOrder confirms orders.
 func (t *StoreOper) ConfirmOrder(param *xbase.HubConfirmH5OrderParam, auth string) (*xbase.HubCreateResp, *xbase.RequestRes, error) {
 	if err := param.Valid(); err != nil {
-		return nil, nil, err
+		return nil, nil, xbase.ErrParamInvalid
 	}
 	// 使用百度收银台H5支付时，请提供鉴权串
 	secretAuth, err := t.GenSecretData(auth)
@@ -860,7 +870,7 @@ func (t *StoreOper) ConfirmOrder(param *xbase.HubConfirmH5OrderParam, auth strin
 // QueryOrderDetail gets order info.
 func (t *StoreOper) QueryOrderDetail(param *xbase.HubOrderDetailParam) (*xbase.HubOrderDetailResp, *xbase.RequestRes, error) {
 	if err := param.Valid(); err != nil {
-		return nil, nil, err
+		return nil, nil, xbase.ErrParamInvalid
 	}
 	v := url.Values{}
 	v.Set("oid", fmt.Sprintf("%d", param.Oid))
@@ -897,7 +907,7 @@ func (t *StoreOper) QueryOrderDetail(param *xbase.HubOrderDetailParam) (*xbase.H
 // EditOrder edits order info.
 func (t *StoreOper) EditOrder(param *xbase.HubEditOrderParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
 	if err := param.Valid(); err != nil {
-		return nil, nil, err
+		return nil, nil, xbase.ErrParamInvalid
 	}
 	v := url.Values{}
 	v.Set("oid", fmt.Sprintf("%d", param.Oid))
@@ -942,7 +952,7 @@ func (t *StoreOper) EditOrder(param *xbase.HubEditOrderParam) (*xbase.BaseResp, 
 // QueryOrderList gets order list by address.
 func (t *StoreOper) QueryOrderList(param *xbase.HubListOrderParam) (*xbase.HubListOrderResp, *xbase.RequestRes, error) {
 	if err := param.Valid(); err != nil {
-		return nil, nil, err
+		return nil, nil, xbase.ErrParamInvalid
 	}
 	v := url.Values{}
 	v.Set("address", param.Addr)
