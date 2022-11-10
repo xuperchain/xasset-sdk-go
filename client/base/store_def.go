@@ -442,3 +442,11 @@ type HubListOrderData struct {
 	Cursor  string           `json:"cursor"`
 	HasMore int              `json:"has_more"`
 }
+
+type H5OrderItem struct {
+	TpOrderId    int64  `json:"oid"`
+	OrderInfoUrl string `json:"order_url"`
+	H5PayInfo    string `json:"pay_info"`
+	TotalAmount  string `json:"total_amount"`
+	CTime        int64  `json:"ctime"`
+}
