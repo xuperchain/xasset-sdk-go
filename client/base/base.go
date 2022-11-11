@@ -259,8 +259,9 @@ type BaseResp struct {
 
 // XassetBaseClient
 type XassetBaseClient struct {
-	Cfg    *config.XassetCliConfig
-	Logger *logs.Logger
+	Cfg         *config.XassetCliConfig
+	Logger      *logs.Logger
+	ExtraHeader map[string]string
 }
 
 func (t *XassetBaseClient) InitClient(cfg *config.XassetCliConfig, logger logs.LogDriver) error {
@@ -270,12 +271,17 @@ func (t *XassetBaseClient) InitClient(cfg *config.XassetCliConfig, logger logs.L
 
 	t.Cfg = cfg
 	t.Logger = logs.NewLogger(logger)
+	t.ExtraHeader = make(map[string]string)
 
 	return nil
 }
 
 func (t *XassetBaseClient) GetConfig() *config.XassetCliConfig {
 	return t.Cfg
+}
+
+func (t *XassetBaseClient) SetHeader(k, v string) {
+	t.ExtraHeader[k] = v
 }
 
 func (t *XassetBaseClient) Post(uri, data string) (*RequestRes, error) {
@@ -302,6 +308,10 @@ func (t *XassetBaseClient) Post(uri, data string) (*RequestRes, error) {
 		return nil, ComErrXassetSignFailed
 	}
 	req.Header.Set("Authorization", sign)
+
+	for k, v := range t.ExtraHeader {
+		req.Header.Set(k, v)
+	}
 
 	opts := make(map[string]string)
 	if httpcli.IsHttps(reqUrl) {
