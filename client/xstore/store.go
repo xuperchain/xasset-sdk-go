@@ -750,7 +750,8 @@ func (t *StoreOper) ListActAst(param *xbase.BaseActParam) (*xbase.ListActAstResp
 
 // CreateOrder creates orders.
 func (t *StoreOper) CreateOrder(param *xbase.HubCreateOrderParam, uid int64, auth string) (*xbase.HubCreateResp, *xbase.RequestRes, error) {
-	if err := param.Valid(); err != nil {
+	var err error
+	if err = param.Valid(); err != nil {
 		return nil, nil, xbase.ErrParamInvalid
 	}
 	// 使用百度收银台H5支付组件请务必携带鉴权串
@@ -763,15 +764,20 @@ func (t *StoreOper) CreateOrder(param *xbase.HubCreateOrderParam, uid int64, aut
 			return nil, nil, xbase.ErrParamInvalid
 		}
 	}
+	var secretAuth, uk string
+	if auth != "" {
+		secretAuth, err = t.GenSecretData(auth)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	if uid > 0 {
+		uk, err = t.GenSecretData(fmt.Sprintf("%d", uid))
+		if err != nil {
+			return nil, nil, err
+		}
+	}
 
-	secretAuth, err := t.GenSecretData(auth)
-	if err != nil {
-		return nil, nil, err
-	}
-	uk, err := t.GenSecretData(fmt.Sprintf("%d", uid))
-	if err != nil {
-		return nil, nil, err
-	}
 	v := url.Values{}
 	v.Set("code", fmt.Sprintf("%d", param.Code))
 	v.Set("order_type", fmt.Sprintf("%d", param.OrderType))
@@ -823,13 +829,17 @@ func (t *StoreOper) CreateOrder(param *xbase.HubCreateOrderParam, uid int64, aut
 
 // ConfirmOrder confirms orders.
 func (t *StoreOper) ConfirmOrder(param *xbase.HubConfirmH5OrderParam, auth string) (*xbase.HubCreateResp, *xbase.RequestRes, error) {
-	if err := param.Valid(); err != nil {
+	var err error
+	if err = param.Valid(); err != nil {
 		return nil, nil, xbase.ErrParamInvalid
 	}
 	// 使用百度收银台H5支付时，请提供鉴权串
-	secretAuth, err := t.GenSecretData(auth)
-	if err != nil {
-		return nil, nil, err
+	var secretAuth string
+	if auth != "" {
+		secretAuth, err = t.GenSecretData(auth)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 	v := url.Values{}
 	v.Set("code", fmt.Sprintf("%d", param.Code))
@@ -959,6 +969,8 @@ func (t *StoreOper) QueryOrderList(param *xbase.HubListOrderParam) (*xbase.HubLi
 	v.Set("status", fmt.Sprintf("%d", param.Status))
 	v.Set("cursor", param.Cursor)
 	v.Set("limit", fmt.Sprintf("%d", param.Limit))
+	v.Set("time_begin", fmt.Sprintf("%d", param.TimeBegin))
+	v.Set("time_end", fmt.Sprintf("%d", param.TimeEnd))
 
 	body := v.Encode()
 	res, err := t.Post(xbase.HubListOrder, body)
@@ -973,6 +985,49 @@ func (t *StoreOper) QueryOrderList(param *xbase.HubListOrderParam) (*xbase.HubLi
 	}
 
 	var resp xbase.HubListOrderResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [param: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// QueryOrderPage gets order pages by address.
+func (t *StoreOper) QueryOrderPage(param *xbase.HubOrderPageParam) (*xbase.HubOrderPageResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, xbase.ErrParamInvalid
+	}
+	v := url.Values{}
+	v.Set("address", param.Addr)
+	v.Set("status", fmt.Sprintf("%d", param.Status))
+	v.Set("page", fmt.Sprintf("%d", param.Page))
+	v.Set("size", fmt.Sprintf("%d", param.Size))
+	v.Set("time_begin", fmt.Sprintf("%d", param.TimeBegin))
+	v.Set("time_end", fmt.Sprintf("%d", param.TimeEnd))
+
+	body := v.Encode()
+	res, err := t.Post(xbase.HubListOrderPage, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.HubListOrderPage, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.HubOrderPageResp
 	err = json.Unmarshal([]byte(res.Body), &resp)
 	if err != nil {
 		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",

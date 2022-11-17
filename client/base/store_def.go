@@ -20,11 +20,12 @@ const (
 	StoreApiQueryAst         = "/xasset/store/v1/queryast"
 	StoreApiListAst          = "/xasset/store/v1/listast"
 
-	HubCreateOrder  = "/xasset/trade/v1/create_order"
-	HubConfirmOrder = "/xasset/trade/v1/confirm_order"
-	HubDetailOrder  = "/xasset/trade/v1/order_detail"
-	HubEditOrder    = "/xasset/trade/v1/edit_order"
-	HubListOrder    = "/xasset/trade/v1/order_list"
+	HubCreateOrder   = "/xasset/trade/v1/create_order"
+	HubConfirmOrder  = "/xasset/trade/v1/confirm_order"
+	HubDetailOrder   = "/xasset/trade/v1/order_detail"
+	HubEditOrder     = "/xasset/trade/v1/edit_order"
+	HubListOrder     = "/xasset/trade/v1/order_list"
+	HubListOrderPage = "/xasset/trade/v1/order_page"
 )
 
 /////// Create Store /////////
@@ -412,10 +413,12 @@ func (p *HubEditOrderParam) Valid() error {
 }
 
 type HubListOrderParam struct {
-	Addr   string `json:"address"`
-	Status int    `json:"status"`
-	Cursor string `json:"cursor"`
-	Limit  int    `json:"limit"`
+	Addr      string `json:"address"`
+	Status    int    `json:"status"`
+	Cursor    string `json:"cursor"`
+	Limit     int    `json:"limit"`
+	TimeBegin int64  `json:"time_begin"`
+	TimeEnd   int64  `json:"time_end"`
 }
 
 func (p *HubListOrderParam) Valid() error {
@@ -449,4 +452,40 @@ type H5OrderItem struct {
 	H5PayInfo    string `json:"pay_info"`
 	TotalAmount  string `json:"total_amount"`
 	CTime        int64  `json:"ctime"`
+}
+
+type HubOrderPageParam struct {
+	Addr      string `json:"address"`
+	Status    int    `json:"status"`
+	Page      int    `json:"page"`
+	Size      int    `json:"size"`
+	TimeBegin int64  `json:"time_begin"`
+	TimeEnd   int64  `json:"time_end"`
+}
+
+func (p *HubOrderPageParam) Valid() error {
+	if p.Addr == "" {
+		return fmt.Errorf("addr invalid")
+	}
+	if p.Status < 0 {
+		return fmt.Errorf("addr invalid")
+	}
+	if p.Page < 0 {
+		return fmt.Errorf("cursor page invalid")
+	}
+	if p.Size < 0 {
+		return fmt.Errorf("cursor size invalid")
+	}
+
+	return nil
+}
+
+type HubOrderPageData struct {
+	List  []HubOrderDetail `json:"list"`
+	Total int64            `json:"total"`
+}
+
+type HubOrderPageResp struct {
+	BaseResp
+	Data HubOrderPageData `json:"data"`
 }
