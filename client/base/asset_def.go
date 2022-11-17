@@ -141,6 +141,7 @@ func CreateAssetInfoValid(p *CreateAssetInfo) error {
 }
 
 type CreateAssetParam struct {
+	AssetId   int64            `json:"asset_id"` // optional
 	Price     int64            `json:"price,omitempty"`
 	Amount    int              `json:"amount"`
 	AssetInfo *CreateAssetInfo `json:"asset_info"`
