@@ -162,7 +162,11 @@ func (t *AssetOper) UploadFile(param *xbase.UploadFileParam) (*xbase.UploadFileR
 //	}
 func (t *AssetOper) genCreateAssetBody(appid int64, param *xbase.CreateAssetParam) (string, error) {
 	nonce := utils.GenNonce()
-	assetId := utils.GenAssetId(appid)
+	assetId := param.AssetId
+	// generate assetId if not specified
+	if assetId == 0 {
+		assetId = utils.GenAssetId(appid)
+	}
 	signMsg := fmt.Sprintf("%d%d", assetId, nonce)
 	sign, err := auth.XassetSignECDSA(param.Account.PrivateKey, []byte(signMsg))
 	if err != nil {
