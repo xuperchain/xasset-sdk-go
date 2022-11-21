@@ -14,16 +14,16 @@ var (
 	AccountA = base.TestAccount
 )
 
-func TestListActAst(t *testing.T) {
-	param := &base.BaseActParam{
-		ActId: 5407,
+func TestListAct(t *testing.T) {
+	param := &base.ListActParam{
+		StoreId: 0,
 	}
 	handle, _ := NewXstoreOper(base.TestGetXassetConfig(), &base.TestLogger{})
-	resp, _, err := handle.ListActAst(param)
+	resp, _, err := handle.ListAct(param)
 	if err != nil {
 		t.Errorf("list act error.err:%v", err)
 		return
 	}
 
-	fmt.Println(resp.List[0].ActId)
+	fmt.Println(resp.List[0])
 }
