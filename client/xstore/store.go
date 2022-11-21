@@ -10,6 +10,7 @@ import (
 	xbase "github.com/xuperchain/xasset-sdk-go/client/base"
 	"github.com/xuperchain/xasset-sdk-go/common/config"
 	"github.com/xuperchain/xasset-sdk-go/common/logs"
+	"github.com/xuperchain/xasset-sdk-go/utils"
 )
 
 type StoreOper struct {
