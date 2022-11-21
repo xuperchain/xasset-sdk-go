@@ -249,7 +249,7 @@ type ListActAstResp struct {
 type QueryActAstMeta struct {
 	AppId         int64    `json:"app_id"`
 	Addr          string   `json:"addr"`
-	AssetId       string   `json:"asset_id"`
+	AssetId       int64   `json:"asset_id"`
 	AssetCate     int      `json:"asset_cate"`
 	Thumb         []string `json:"thumb"`
 	Title         string   `json:"title"`
@@ -257,7 +257,7 @@ type QueryActAstMeta struct {
 	TxId          string   `json:"tx_id"`
 	AssetUrl      []string `json:"asset_url"`
 	ImgDesc       []string `json:"img_desc"`
-	ActId         string   `json:"act_id"`
+	ActId         int64   `json:"act_id"`
 	Start         int64    `json:"start"`
 	End           int64    `json:"end"`
 	Price         int64    `json:"price"`
