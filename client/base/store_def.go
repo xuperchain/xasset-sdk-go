@@ -249,7 +249,7 @@ type ListActAstResp struct {
 type QueryActAstMeta struct {
 	AppId         int64    `json:"app_id"`
 	Addr          string   `json:"addr"`
-	AssetId       int64   `json:"asset_id"`
+	AssetId       int64    `json:"asset_id"`
 	AssetCate     int      `json:"asset_cate"`
 	Thumb         []string `json:"thumb"`
 	Title         string   `json:"title"`
@@ -257,7 +257,7 @@ type QueryActAstMeta struct {
 	TxId          string   `json:"tx_id"`
 	AssetUrl      []string `json:"asset_url"`
 	ImgDesc       []string `json:"img_desc"`
-	ActId         int64   `json:"act_id"`
+	ActId         int64    `json:"act_id"`
 	Start         int64    `json:"start"`
 	End           int64    `json:"end"`
 	Price         int64    `json:"price"`
@@ -422,11 +422,8 @@ type HubListOrderParam struct {
 }
 
 func (p *HubListOrderParam) Valid() error {
-	if p.Addr == "" {
-		return fmt.Errorf("addr invalid")
-	}
 	if p.Status < 0 {
-		return fmt.Errorf("addr invalid")
+		return fmt.Errorf("status invalid")
 	}
 	if p.Limit < 0 {
 		return fmt.Errorf("cursor limit invalid")
@@ -464,11 +461,8 @@ type HubOrderPageParam struct {
 }
 
 func (p *HubOrderPageParam) Valid() error {
-	if p.Addr == "" {
-		return fmt.Errorf("addr invalid")
-	}
 	if p.Status < 0 {
-		return fmt.Errorf("addr invalid")
+		return fmt.Errorf("status invalid")
 	}
 	if p.Page < 0 {
 		return fmt.Errorf("cursor page invalid")
