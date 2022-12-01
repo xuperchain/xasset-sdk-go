@@ -1052,6 +1052,7 @@ func (t *StoreOper) CountOrder(param *xbase.CountOrderParam) (*xbase.CountOrderR
 	}
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("status", fmt.Sprintf("%d", param.Status))
 
 	body := v.Encode()
 	res, err := t.Post(xbase.CountOrder, body)

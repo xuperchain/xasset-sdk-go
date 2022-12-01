@@ -487,11 +487,15 @@ type HubOrderPageResp struct {
 
 type CountOrderParam struct {
 	AssetId int64 `json:"asset_id"`
+	Status  int   `json:"status"`
 }
 
 func (p *CountOrderParam) Valid() error {
 	if p.AssetId <= 0 {
 		return fmt.Errorf("asset_id invalid, must be a positive integer")
+	}
+	if p.Status < 0 {
+		return fmt.Errorf("status invalid")
 	}
 	return nil
 }
