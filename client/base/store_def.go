@@ -89,7 +89,7 @@ type QueryStoreMeta struct {
 	Weight    int    `json:"weight"`
 	ExtInfo   string `json:"ext_info"`
 	Wechat    string `json:"wechat"`
-	Likes     int64  `json:"int64"`
+	Likes     int64  `json:"likes"`
 }
 
 /////// Create Act /////////
@@ -102,6 +102,7 @@ type CreateOrAlterActParam struct {
 	ShortDesc string `json:"short_desc"`
 	Thumb     string `json:"thumb"`
 	ImgDesc   string `json:"img_desc"`
+	Bookable  int    `json:"bookable"`
 	Start     int64  `json:"start"`
 	End       int64  `json:"end"`
 	Weight    int    `json:"weight,omitempty"`
@@ -154,6 +155,7 @@ type QueryActMeta struct {
 	PublishStatus int      `json:"publish_status"`
 	Start         int64    `json:"start"`
 	End           int64    `json:"end"`
+	Bookable      int      `json:"bookable"`
 	Weight        int      `json:"weight"`
 	ExtInfo       string   `json:"ext_info"`
 	Ctime         int64    `json:"ctime"`
@@ -163,7 +165,7 @@ type QueryActMeta struct {
 type ListActParam struct {
 	StoreId int    `json:"store_id"`
 	Cursor  string `json:"cursor"`
-	Limit   int    `json:"limie"`
+	Limit   int    `json:"limit"`
 }
 
 func (t *ListActParam) Valid() error {
