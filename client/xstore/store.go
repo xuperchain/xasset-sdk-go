@@ -972,6 +972,7 @@ func (t *StoreOper) QueryOrderList(param *xbase.HubListOrderParam) (*xbase.HubLi
 	v.Set("limit", fmt.Sprintf("%d", param.Limit))
 	v.Set("time_begin", fmt.Sprintf("%d", param.TimeBegin))
 	v.Set("time_end", fmt.Sprintf("%d", param.TimeEnd))
+	v.Set("monotonicity", fmt.Sprintf("%d", param.Mono))
 
 	body := v.Encode()
 	res, err := t.Post(xbase.HubListOrder, body)

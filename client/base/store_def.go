@@ -422,6 +422,7 @@ type HubListOrderParam struct {
 	Limit     int    `json:"limit"`
 	TimeBegin int64  `json:"time_begin"`
 	TimeEnd   int64  `json:"time_end"`
+	Mono      int    `json:"monotonicity"` // monotonicity = 0 orders by ctime desc
 }
 
 func (p *HubListOrderParam) Valid() error {
