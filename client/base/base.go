@@ -46,6 +46,8 @@ const (
 	AssetCateTicket
 	// 4.酒店
 	AssetCateHotel
+	// 5.盲盒
+	AssetCateBlindBox
 )
 
 // 列表分页范围限制
@@ -100,7 +102,7 @@ func HasAssetType(t AssetType) bool {
 }
 
 func AssetTypeValid(t AssetType) error {
-	if t >= AssetCateArt && t <= AssetCateHotel {
+	if t >= AssetCateArt && t <= AssetCateBlindBox {
 		return nil
 	}
 	return ErrAssetTypeInvalid

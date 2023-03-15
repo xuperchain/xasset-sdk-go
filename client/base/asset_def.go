@@ -148,15 +148,16 @@ type UploadFileResp struct {
 
 ///////// Create Asset ///////////
 type CreateAssetInfo struct {
-	AssetCate AssetType `json:"asset_cate"`
-	Title     string    `json:"title"`
-	Thumb     []string  `json:"thumb"`
-	ShortDesc string    `json:"short_desc"`
-	ImgDesc   []string  `json:"img_desc"`
-	AssetUrl  []string  `json:"asset_url"`
-	LongDesc  string    `json:"long_desc,omitempty"`
-	AssetExt  string    `json:"asset_ext,omitempty"`
-	GroupId   int64     `json:"group_id,omitempty"`
+	AssetCate 	AssetType `json:"asset_cate"`
+	Title     	string    `json:"title"`
+	Thumb     	[]string  `json:"thumb"`
+	ShortDesc 	string    `json:"short_desc"`
+	ImgDesc  	[]string  `json:"img_desc"`
+	AssetUrl  	[]string  `json:"asset_url"`
+	LongDesc  	string    `json:"long_desc,omitempty"`
+	AssetExt  	string    `json:"asset_ext,omitempty"`
+	GroupId   	int64     `json:"group_id,omitempty"`
+	ProcScript  string 	  `json:"proc_script,omitempty"`
 }
 
 func CreateAssetInfoValid(p *CreateAssetInfo) error {
@@ -217,15 +218,16 @@ type CreateAssetResp struct {
 
 ///////// Alter Asset //////////
 type AlterAssetInfo struct {
-	AssetCate AssetType `json:"asset_cate,omitempty"`
-	Title     string    `json:"title,omitempty"`
-	Thumb     []string  `json:"thumb,omitempty"`
-	ShortDesc string    `json:"short_desc,omitempty"`
-	ImgDesc   []string  `json:"img_desc,omitempty"`
-	AssetUrl  []string  `json:"asset_url,omitempty"`
-	LongDesc  string    `json:"long_desc,omitempty"`
-	AssetExt  string    `json:"asset_ext,omitempty"`
-	GroupId   int64     `json:"group_id,omitempty"`
+	AssetCate 	AssetType `json:"asset_cate,omitempty"`
+	Title     	string    `json:"title,omitempty"`
+	Thumb     	[]string  `json:"thumb,omitempty"`
+	ShortDesc 	string    `json:"short_desc,omitempty"`
+	ImgDesc   	[]string  `json:"img_desc,omitempty"`
+	AssetUrl  	[]string  `json:"asset_url,omitempty"`
+	LongDesc  	string    `json:"long_desc,omitempty"`
+	AssetExt  	string    `json:"asset_ext,omitempty"`
+	GroupId   	int64     `json:"group_id,omitempty"`
+	ProcScript  string 	  `json:"proc_script,omitempty"`
 }
 
 func AlterAssetInfoValid(p *AlterAssetInfo) error {
@@ -245,7 +247,7 @@ func AlterAssetInfoValid(p *AlterAssetInfo) error {
 	if !HasAssetType(p.AssetCate) &&
 		!HasDesc(p.Title) && !HasDesc(p.ShortDesc) && !HasDesc(p.LongDesc) && !HasDesc(p.AssetExt) &&
 		!HasImg(p.Thumb) && !HasImg(p.ImgDesc) && !HasImg(p.AssetUrl) &&
-		!HasId(p.GroupId) {
+		!HasId(p.GroupId) && !HasDesc(p.ProcScript) {
 		return ErrAlterInfo
 	}
 	return nil
