@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strconv"
 
 	auth2 "github.com/baidubce/bce-sdk-go/auth"
 	"github.com/baidubce/bce-sdk-go/services/bos"
@@ -1561,4 +1562,113 @@ func (t *AssetOper) aesEncodeStr(str string) (string, error) {
 
 func (t *AssetOper) aesDecodeStr(str string) (string, error) {
 	return utils.AesDecode(str, t.Cfg.Credentials.SecretAccessKey)
+}
+
+func (t *AssetOper) VilgText2Img(param *xbase.VilgText2ImgParam) (*xbase.VilgText2ImgResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+
+	v := url.Values{}
+	v.Set("text", param.Text)
+	v.Set("style", strconv.FormatInt(param.Style, 10))
+	v.Set("resolution", strconv.FormatInt(param.Resolution, 10))
+	v.Set("extend", param.Extend)
+	body := v.Encode()
+
+	res, err := t.Post(xbase.VilgApiText2Img, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.VilgText2ImgResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [taskId:%+v] [url:%s] [request_id:%s] [trace_id:%s]",
+		resp.TaskId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) VilgGetImg(taskId int64) (*xbase.VilgGetImgResp, *xbase.RequestRes, error) {
+	if taskId <= 0 {
+		return nil, nil, xbase.ErrParamInvalid
+	}
+
+	v := url.Values{}
+	v.Set("task_id", strconv.FormatInt(taskId, 10))
+	body := v.Encode()
+
+	res, err := t.Post(xbase.VilgApiGetImg, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.VilgGetImgResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [status:%+v] [url:%s] [request_id:%s] [trace_id:%s]",
+		resp.Task.Status, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) VilgBalance() (*xbase.VilgBalanceResp, *xbase.RequestRes, error) {
+	res, err := t.Post(xbase.VilgApiBalance, "")
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.VilgBalanceResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [balance:%+v] [url:%s] [request_id:%s] [trace_id:%s]",
+		resp.Balance, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
 }

@@ -2,6 +2,7 @@ package base
 
 import (
 	"encoding/json"
+	"unicode/utf8"
 
 	"github.com/xuperchain/xasset-sdk-go/auth"
 )
@@ -34,6 +35,10 @@ const (
 	DidApiBind         = "/xasset/did/v1/bdboxbind"
 	DidApiBindByUid    = "/xasset/did/v1/bindbyunionid"
 	DidApiGetAddrByUid = "/xasset/did/v1/getaddrbyunionid"
+
+	VilgApiText2Img = "/xasset/vilg/v1/text2img"
+	VilgApiGetImg   = "/xasset/vilg/v1/getimg"
+	VilgApiBalance  = "/xasset/vilg/v1/balance"
 )
 
 /////// Gen Token /////////
@@ -894,4 +899,100 @@ func (t *BindByUnionIdParam) Valid() error {
 type GetAddrByUnionIdResp struct {
 	BaseResp
 	Address string `json:"address"`
+}
+
+///////////// Vilg text2img /////////////////
+var supportedStyle = map[int64]string{
+	1:  "古风",
+	2:  "二次元",
+	3:  "写实风格",
+	4:  "浮世绘",
+	5:  "low poly",
+	6:  "未来主义",
+	7:  "像素风格",
+	8:  "概念艺术",
+	9:  "赛博朋克",
+	10: "洛丽塔风格",
+	11: "巴洛克风格",
+	12: "超现实主义",
+	13: "水彩画",
+	14: "蒸汽波艺术",
+	15: "油画",
+	16: "卡通画",
+}
+
+var supportedResolution = map[int64]string{
+	1: "1024*1024",
+	2: "1024*1536",
+	3: "1536*1024",
+}
+
+type VilgText2ImgParam struct {
+	Text       string `json:"text"`       // 文本内容
+	Style      int64  `json:"style"`      // 风格
+	Resolution int64  `json:"resolution"` // 分辨率
+	Extend     string `json:"extend"`     // 用户信息，查询时原样返回，长度100字符以内
+}
+
+func (t *VilgText2ImgParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+
+	if len(t.Text) == 0 {
+		return ErrParamInvalid
+	}
+	words := utf8.RuneCountInString(t.Text)
+	if words == 0 || words > 100 {
+		return ErrParamInvalid
+	}
+
+	if _, exist := supportedStyle[t.Style]; !exist {
+		return ErrParamInvalid
+	}
+
+	if _, exist := supportedResolution[t.Resolution]; !exist {
+		return ErrParamInvalid
+	}
+
+	if utf8.RuneCountInString(t.Extend) > 100 {
+		return ErrParamInvalid
+	}
+
+	return nil
+}
+
+type VilgText2ImgResp struct {
+	BaseResp
+	TaskId int64 `json:"task_id"`
+}
+
+///////////// Vilg getimg /////////////////
+
+const (
+	ViLGTaskStatusInit   = 0
+	ViLGTaskStatusDone   = 1
+	ViLGTaskStatusFailed = 9
+)
+
+type VilgGetImgResp struct {
+	BaseResp
+	Task struct {
+		TaskId int64  `json:"task_id"`
+		Status int64  `json:"status"` // 任务状态
+		Img    string `json:"img"`    // 状态为 1 时表示图片 URL
+
+		// 原始请求，便于回溯
+		Text       string `json:"text"`
+		Style      int64  `json:"style"`
+		Resolution int64  `json:"resolution"`
+		Extend     string `json:"extend"`
+	} `json:"task"`
+}
+
+///////////// Vilg balance /////////////////
+
+type VilgBalanceResp struct {
+	BaseResp
+	Balance int64 `json:"balance"`
 }
