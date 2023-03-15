@@ -21,6 +21,8 @@ const (
 	AssetListShardsByAsset   = "/xasset/horae/v1/listsdsbyast"
 	AssetApiGetEvidenceInfo  = "/xasset/horae/v1/getevidenceinfo"
 	AssetApiListDiffByAddr   = "/xasset/horae/v1/listdiffbyaddr"
+	AssetApiSelectBoxAst 	 = "/xasset/horae/v1/selboxast"
+	AssetApiGrantBox 		 = "/xasset/horae/v1/grantbox"
 	FileApiGetStoken         = "/xasset/file/v1/getstoken"
 	ListAssetHistory         = "/xasset/horae/v1/history"
 
@@ -35,6 +37,45 @@ const (
 	DidApiBindByUid    = "/xasset/did/v1/bindbyunionid"
 	DidApiGetAddrByUid = "/xasset/did/v1/getaddrbyunionid"
 )
+
+type SelBoxAstParam struct {
+	AssetId int64
+	ShardId int64
+}
+
+func (t *SelBoxAstParam) Valid() error {
+	if t.AssetId < 1 || t.ShardId < 1 {
+		return ErrAssetInvalid
+	}
+	return nil
+}
+
+type SelBoxAstResp struct {
+	BaseResp
+	RealAstId int64  `json:"real_asset_id"`
+	Token 	  string `json:"token"`
+}
+
+type GrantBoxParam struct {
+	Token        string
+	UAccount 	 *auth.Account
+	CAccount 	 *auth.Account
+	AssetId      int64
+	UserId       int64
+}
+
+func (t *GrantBoxParam) Valid() error {
+	if t.Token == "" || t.UAccount == nil || t.CAccount == nil || t.AssetId < 1 {
+		return ErrAssetInvalid
+	}
+	return nil
+}
+
+type GrantBoxResp struct {
+	BaseResp
+	AssetId int64 `json:"asset_id"`
+	ShardId int64 `json:"shard_id"`
+}
 
 /////// Gen Token /////////
 type GetStokenParam struct {
@@ -606,7 +647,6 @@ type ConsumeShardParam struct {
 	UAddr    string        `json:"user_addr"`
 	USign    string        `json:"user_sign"`
 	UPKey    string        `json:"user_pkey"`
-	CAccount *auth.Account `json:"create_account"`
 }
 
 func (t *ConsumeShardParam) Valid() error {
@@ -620,9 +660,6 @@ func (t *ConsumeShardParam) Valid() error {
 		return err
 	}
 	if err := IdValid(t.Nonce); err != nil {
-		return err
-	}
-	if err := AccountValid(t.CAccount); err != nil {
 		return err
 	}
 	if err := AddrValid(t.UAddr); err != nil {

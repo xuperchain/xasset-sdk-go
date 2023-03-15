@@ -1019,22 +1019,12 @@ func (t *AssetOper) FreezeAsset(param *xbase.FreezeAssetParam) (*xbase.BaseResp,
 //				UAddr    string        `json:"user_addr"`
 //				USign    string        `json:"user_sign"`
 //				UPKey    string        `json:"user_pkey"`
-//				CAccount *auth.Account `json:"create_account"`
 //		  }
 func (t *AssetOper) genConsumeShardBody(param *xbase.ConsumeShardParam) (string, error) {
-	signMsg := fmt.Sprintf("%d%d", param.AssetId, param.Nonce)
-	sign, err := auth.XassetSignECDSA(param.CAccount.PrivateKey, []byte(signMsg))
-	if err != nil {
-		return "", xbase.ComErrAccountSignFailed
-	}
-
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
 	v.Set("shard_id", fmt.Sprintf("%d", param.ShardId))
 	v.Set("nonce", fmt.Sprintf("%d", param.Nonce))
-	v.Set("addr", param.CAccount.Address)
-	v.Set("sign", sign)
-	v.Set("pkey", param.CAccount.PublicKey)
 	v.Set("user_addr", param.UAddr)
 	v.Set("user_sign", param.USign)
 	v.Set("user_pkey", param.UPKey)
@@ -1079,6 +1069,140 @@ func (t *AssetOper) ConsumeShard(param *xbase.ConsumeShardParam) (*xbase.BaseRes
 
 	t.Logger.Trace("operate succ. [asset_id: %d] [shard_id: %d] [url: %s] [request_id: %s] [trace_id: %s]",
 		param.AssetId, param.ShardId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// genSelBoxAstBody uses the general parameter as follows,
+//
+//	   {
+//			   AssetId  int64
+//			   ShardId  int64
+//		  }
+func (t *AssetOper) genSelBoxAstBody(param *xbase.SelBoxAstParam) (string, error) {
+	v := url.Values{}
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("shard_id", fmt.Sprintf("%d", param.ShardId))
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) SelectBoxAst(param *xbase.SelBoxAstParam) (*xbase.SelBoxAstResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+
+	body, err := t.genSelBoxAstBody(param)
+	if err != nil {
+		t.Logger.Warn("fail to generate value for select box asset, err: %v, param: %+v", err, *param)
+		return nil, nil, err
+	}
+	res, err := t.Post(xbase.AssetApiSelectBoxAst, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed.err:%v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.SelBoxAstResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [real_asset_id: %d] [token: %s] [url: %s] [request_id: %s] [trace_id: %s]",
+		resp.RealAstId, resp.Token, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+
+// genGrantBoxBody uses the general parameter as follows,
+//
+//	   {
+//				Token        string
+//				UAccount 	 *auth.Account
+//				CAccount 	 *auth.Account
+//				AssetId      int64
+//				UserId       int64
+//		  }
+func (t *AssetOper) genGrantBoxBody(param *xbase.GrantBoxParam) (string, error) {
+	consumeNonce := utils.GenNonce()
+	consumeSignMsg := fmt.Sprintf("%d%d", param.AssetId, consumeNonce)
+	uSign, err := auth.XassetSignECDSA(param.UAccount.PrivateKey, []byte(consumeSignMsg))
+	if err != nil {
+		return "", xbase.ComErrAccountSignFailed
+	}
+
+	grantNonce := utils.GenNonce()
+	grantSignMsg := fmt.Sprintf("%d%d", param.AssetId, grantNonce)
+	cSign, err := auth.XassetSignECDSA(param.CAccount.PrivateKey, []byte(grantSignMsg))
+	if err != nil {
+		return "", xbase.ComErrAccountSignFailed
+	}
+
+	v := url.Values{}
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("consume_nonce", fmt.Sprintf("%d", consumeNonce))
+	v.Set("grant_nonce", fmt.Sprintf("%d", grantNonce))
+	v.Set("token", param.Token)
+	v.Set("user_addr", param.UAccount.Address)
+	v.Set("user_sign", uSign)
+	v.Set("user_pkey", param.UAccount.PublicKey)
+	v.Set("create_addr", param.CAccount.Address)
+	v.Set("create_sign", cSign)
+	v.Set("create_pkey", param.CAccount.PublicKey)
+	v.Set("user_id", fmt.Sprintf("%d", param.UserId))
+
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) GrantBox(param *xbase.GrantBoxParam) (*xbase.GrantBoxResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+
+	body, err := t.genGrantBoxBody(param)
+	if err != nil {
+		t.Logger.Warn("fail to generate value for grant box asset, err: %v, param: %+v", err, *param)
+		return nil, nil, err
+	}
+	res, err := t.Post(xbase.AssetApiGrantBox, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed.err:%v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.GrantBoxResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [asset_id: %d] [shard_id: %d] [url: %s] [request_id: %s] [trace_id: %s]",
+		resp.AssetId, resp.ShardId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
 	return &resp, res, nil
 }
 

@@ -319,6 +319,7 @@ type HubCreateOrderParam struct {
 	ClientType int    `json:"client_type"`
 	Chan       int64  `json:"chan"`
 	Scene      int64  `json:"scene"`
+	BuyCount   int 	  `json:"buy_count"`
 }
 
 func (p *HubCreateOrderParam) Valid() error {
@@ -328,6 +329,10 @@ func (p *HubCreateOrderParam) Valid() error {
 
 	if p.AssetId <= 0 {
 		return fmt.Errorf("asset_id invalid, must be a positive integer")
+	}
+
+	if p.BuyCount <= 0 {
+		return fmt.Errorf("buy_count invalid, must be a positive integer")
 	}
 	return nil
 }
@@ -383,8 +388,7 @@ type HubOrderDetail struct {
 	Oid         int64    `json:"oid"`
 	ActId       int64    `json:"act_id"`
 	AssetId     int64    `json:"asset_id"`
-	ShardId     int64    `json:"shard_id"`
-	AssetCate   int      `json:"asset_cate"`
+	ShardIds    []int64  `json:"shard_ids"`
 	BuyerAddr   string   `json:"buyer_addr"`
 	Status      int      `json:"status"`
 	Title       string   `json:"title"`
@@ -395,6 +399,7 @@ type HubOrderDetail struct {
 	PayTime     int64    `json:"pay_time"`
 	CloseTime   int64    `json:"close_time"`
 	Ctime       int64    `json:"ctime"`
+	BuyCount    int 	 `json:"buy_count"`
 }
 
 type HubEditOrderParam struct {

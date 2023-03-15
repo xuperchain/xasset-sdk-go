@@ -797,6 +797,7 @@ func (t *StoreOper) CreateOrder(param *xbase.HubCreateOrderParam, uid int64, aut
 	v.Set("chan", fmt.Sprintf("%d", param.Chan))
 	v.Set("scene", fmt.Sprintf("%d", param.Scene))
 	v.Set("signed_auth", secretAuth)
+	v.Set("buy_count", fmt.Sprintf("%d", param.BuyCount))
 	body := v.Encode()
 
 	res, err := t.Post(xbase.HubCreateOrder, body)
