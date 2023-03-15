@@ -60,12 +60,13 @@ type GrantBoxParam struct {
 	Token        string
 	UAccount 	 *auth.Account
 	CAccount 	 *auth.Account
-	AssetId      int64
+	RealAssetId  int64
+	BoxAssetId	 int64
 	UserId       int64
 }
 
 func (t *GrantBoxParam) Valid() error {
-	if t.Token == "" || t.UAccount == nil || t.CAccount == nil || t.AssetId < 1 {
+	if t.Token == "" || t.UAccount == nil || t.CAccount == nil || t.RealAssetId < 1 || t.BoxAssetId < 1 {
 		return ErrAssetInvalid
 	}
 	return nil

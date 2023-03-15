@@ -1137,21 +1137,22 @@ func (t *AssetOper) SelectBoxAst(param *xbase.SelBoxAstParam) (*xbase.SelBoxAstR
 //		  }
 func (t *AssetOper) genGrantBoxBody(param *xbase.GrantBoxParam) (string, error) {
 	consumeNonce := utils.GenNonce()
-	consumeSignMsg := fmt.Sprintf("%d%d", param.AssetId, consumeNonce)
+	consumeSignMsg := fmt.Sprintf("%d%d", param.BoxAssetId, consumeNonce)
 	uSign, err := auth.XassetSignECDSA(param.UAccount.PrivateKey, []byte(consumeSignMsg))
 	if err != nil {
 		return "", xbase.ComErrAccountSignFailed
 	}
 
 	grantNonce := utils.GenNonce()
-	grantSignMsg := fmt.Sprintf("%d%d", param.AssetId, grantNonce)
+	grantSignMsg := fmt.Sprintf("%d%d", param.RealAssetId, grantNonce)
 	cSign, err := auth.XassetSignECDSA(param.CAccount.PrivateKey, []byte(grantSignMsg))
 	if err != nil {
 		return "", xbase.ComErrAccountSignFailed
 	}
 
 	v := url.Values{}
-	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("real_asset_id", fmt.Sprintf("%d", param.RealAssetId))
+	v.Set("box_asset_id", fmt.Sprintf("%d", param.BoxAssetId))
 	v.Set("consume_nonce", fmt.Sprintf("%d", consumeNonce))
 	v.Set("grant_nonce", fmt.Sprintf("%d", grantNonce))
 	v.Set("token", param.Token)

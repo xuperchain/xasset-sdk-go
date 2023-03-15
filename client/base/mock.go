@@ -9,18 +9,18 @@ import (
 
 const (
 	// 需要修改为正确的配置
-	TestAppId    = 0
-	TestAK       = "xxx"
-	TestSK       = "xxx"
-	TestEndpoint = "http://120.48.16.137:8360"
+	TestAppId    = 300100
+	TestAK       = "032b9af2f1b776d69c8a55031f2ae68e"
+	TestSK       = "2cb51374f71d8d274b370685d36d2280"
+	TestEndpoint = "http://10.117.131.18:8960"
 	OpenId       = "xxx"
 	AppKey       = "xxx"
 	UnionId      = "xxx"
 )
 
-var TestAccount, _ = auth.NewXchainEcdsaAccount(auth.MnemStrgthStrong, auth.MnemLangCN)
+var TestAccount, _ = auth.RetrieveAccountByMnemonic("旋 即 兄 徐 故 负 吃 雾 喝 添 洲 造", int(auth.MnemLangCN))
 
-var TestTransAccount, _ = auth.NewXchainEcdsaAccount(auth.MnemStrgthStrong, auth.MnemLangCN)
+var TestTransAccount, _ = auth.RetrieveAccountByMnemonic("弟 背 老 杀 风 湿 封 壳 瑞 隶 隶 门", int(auth.MnemLangCN))
 
 func TestGetXassetConfig() *config.XassetCliConfig {
 	cfg := config.NewXassetCliConf()
