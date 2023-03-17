@@ -22,10 +22,13 @@ const (
 	AssetListShardsByAsset   = "/xasset/horae/v1/listsdsbyast"
 	AssetApiGetEvidenceInfo  = "/xasset/horae/v1/getevidenceinfo"
 	AssetApiListDiffByAddr   = "/xasset/horae/v1/listdiffbyaddr"
-	AssetApiSelectBoxAst 	 = "/xasset/horae/v1/selboxast"
-	AssetApiGrantBox 		 = "/xasset/horae/v1/grantbox"
-	FileApiGetStoken         = "/xasset/file/v1/getstoken"
-	ListAssetHistory         = "/xasset/horae/v1/history"
+	AssetApiSelectBoxAst     = "/xasset/horae/v1/selboxast"
+	AssetApiGrantBox         = "/xasset/horae/v1/grantbox"
+	AssetApiSelectMaterial   = "/xasset/horae/v1/selmaterial"
+	AssetApiComposeShard     = "/xasset/horae/v1/compose"
+
+	FileApiGetStoken = "/xasset/file/v1/getstoken"
+	ListAssetHistory = "/xasset/horae/v1/history"
 
 	SceneListShardByAddr = "/xasset/scene/v1/listsdsbyaddr"
 	SceneQueryShard      = "/xasset/scene/v1/qrysdsinfo"
@@ -58,16 +61,16 @@ func (t *SelBoxAstParam) Valid() error {
 type SelBoxAstResp struct {
 	BaseResp
 	RealAstId int64  `json:"real_asset_id"`
-	Token 	  string `json:"token"`
+	Token     string `json:"token"`
 }
 
 type GrantBoxParam struct {
-	Token        string
-	UAccount 	 *auth.Account
-	CAccount 	 *auth.Account
-	RealAssetId  int64
-	BoxAssetId	 int64
-	UserId       int64
+	Token       string
+	UAccount    *auth.Account
+	CAccount    *auth.Account
+	RealAssetId int64
+	BoxAssetId  int64
+	UserId      int64
 }
 
 func (t *GrantBoxParam) Valid() error {
@@ -78,6 +81,62 @@ func (t *GrantBoxParam) Valid() error {
 }
 
 type GrantBoxResp struct {
+	BaseResp
+	AssetId int64 `json:"asset_id"`
+	ShardId int64 `json:"shard_id"`
+}
+
+type SelMaterialParam struct {
+	AssetId int64
+	StrgNo  int
+	Addr    string
+}
+
+func (t *SelMaterialParam) Valid() error {
+	if t.AssetId < 1 || t.StrgNo <= 0 || t.Addr == "" {
+		return ErrAssetInvalid
+	}
+	return nil
+}
+
+type AssetShardPair struct {
+	AssetId int64 `json:"asset_id"`
+	ShardId int64 `json:"shard_id"`
+}
+
+type SelMaterialResp struct {
+	BaseResp
+	List  []*AssetShardPair `json:"list"`
+	Token string            `json:"token"`
+}
+
+type ConsumeNode struct {
+	AssetId int64  `json:"asset_id"`
+	ShardId int64  `json:"shard_id"`
+	Nonce   int64  `json:"nonce"`
+	Sign    string `json:"sign"`
+}
+
+type ComposeParam struct {
+	AssetId  int64
+	StrgNo   int
+	Nonce    int64
+	Sign     string
+	Token    string
+	AstList  string
+	Account  *auth.Account //composite asset creator
+	UAccount *auth.Account //consume shard owner
+}
+
+func (t *ComposeParam) Valid() error {
+	if t.AssetId < 1 || t.StrgNo <= 0 || t.Nonce < 1 || t.Sign == "" || t.AstList == "" ||
+		t.Account == nil || t.UAccount == nil {
+		return ErrAssetInvalid
+	}
+	return nil
+}
+
+type ComposeResp struct {
 	BaseResp
 	AssetId int64 `json:"asset_id"`
 	ShardId int64 `json:"shard_id"`
@@ -154,16 +213,16 @@ type UploadFileResp struct {
 
 ///////// Create Asset ///////////
 type CreateAssetInfo struct {
-	AssetCate 	AssetType `json:"asset_cate"`
-	Title     	string    `json:"title"`
-	Thumb     	[]string  `json:"thumb"`
-	ShortDesc 	string    `json:"short_desc"`
-	ImgDesc  	[]string  `json:"img_desc"`
-	AssetUrl  	[]string  `json:"asset_url"`
-	LongDesc  	string    `json:"long_desc,omitempty"`
-	AssetExt  	string    `json:"asset_ext,omitempty"`
-	GroupId   	int64     `json:"group_id,omitempty"`
-	ProcScript  string 	  `json:"proc_script,omitempty"`
+	AssetCate  AssetType `json:"asset_cate"`
+	Title      string    `json:"title"`
+	Thumb      []string  `json:"thumb"`
+	ShortDesc  string    `json:"short_desc"`
+	ImgDesc    []string  `json:"img_desc"`
+	AssetUrl   []string  `json:"asset_url"`
+	LongDesc   string    `json:"long_desc,omitempty"`
+	AssetExt   string    `json:"asset_ext,omitempty"`
+	GroupId    int64     `json:"group_id,omitempty"`
+	ProcScript string    `json:"proc_script,omitempty"`
 }
 
 func CreateAssetInfoValid(p *CreateAssetInfo) error {
@@ -224,16 +283,16 @@ type CreateAssetResp struct {
 
 ///////// Alter Asset //////////
 type AlterAssetInfo struct {
-	AssetCate 	AssetType `json:"asset_cate,omitempty"`
-	Title     	string    `json:"title,omitempty"`
-	Thumb     	[]string  `json:"thumb,omitempty"`
-	ShortDesc 	string    `json:"short_desc,omitempty"`
-	ImgDesc   	[]string  `json:"img_desc,omitempty"`
-	AssetUrl  	[]string  `json:"asset_url,omitempty"`
-	LongDesc  	string    `json:"long_desc,omitempty"`
-	AssetExt  	string    `json:"asset_ext,omitempty"`
-	GroupId   	int64     `json:"group_id,omitempty"`
-	ProcScript  string 	  `json:"proc_script,omitempty"`
+	AssetCate  AssetType `json:"asset_cate,omitempty"`
+	Title      string    `json:"title,omitempty"`
+	Thumb      []string  `json:"thumb,omitempty"`
+	ShortDesc  string    `json:"short_desc,omitempty"`
+	ImgDesc    []string  `json:"img_desc,omitempty"`
+	AssetUrl   []string  `json:"asset_url,omitempty"`
+	LongDesc   string    `json:"long_desc,omitempty"`
+	AssetExt   string    `json:"asset_ext,omitempty"`
+	GroupId    int64     `json:"group_id,omitempty"`
+	ProcScript string    `json:"proc_script,omitempty"`
 }
 
 func AlterAssetInfoValid(p *AlterAssetInfo) error {
@@ -649,12 +708,12 @@ func (t *FreezeAssetParam) Valid() error {
 
 ////////// Consume Shard ////////////
 type ConsumeShardParam struct {
-	AssetId  int64         `json:"asset_id"`
-	ShardId  int64         `json:"shard_id"`
-	Nonce    int64         `json:"nonce"`
-	UAddr    string        `json:"user_addr"`
-	USign    string        `json:"user_sign"`
-	UPKey    string        `json:"user_pkey"`
+	AssetId int64  `json:"asset_id"`
+	ShardId int64  `json:"shard_id"`
+	Nonce   int64  `json:"nonce"`
+	UAddr   string `json:"user_addr"`
+	USign   string `json:"user_sign"`
+	UPKey   string `json:"user_pkey"`
 }
 
 func (t *ConsumeShardParam) Valid() error {
