@@ -1212,7 +1212,7 @@ func (t *AssetOper) GrantBox(param *xbase.GrantBoxParam) (*xbase.GrantBoxResp, *
 //	   {
 //			   AssetId  int64
 //			   StrgNo   int
-//             Addr     string
+//			   Addr     string
 //		  }
 func (t *AssetOper) genSelMaterialBody(param *xbase.SelMaterialParam) (string, error) {
 	v := url.Values{}
