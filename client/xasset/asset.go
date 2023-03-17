@@ -1126,7 +1126,6 @@ func (t *AssetOper) SelectBoxAst(param *xbase.SelBoxAstParam) (*xbase.SelBoxAstR
 	return &resp, res, nil
 }
 
-
 // genGrantBoxBody uses the general parameter as follows,
 //
 //	   {
@@ -1191,6 +1190,151 @@ func (t *AssetOper) GrantBox(param *xbase.GrantBoxParam) (*xbase.GrantBoxResp, *
 	}
 
 	var resp xbase.GrantBoxResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [asset_id: %d] [shard_id: %d] [url: %s] [request_id: %s] [trace_id: %s]",
+		resp.AssetId, resp.ShardId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// genSelMaterialBody uses the general parameter as follows,
+//
+//	   {
+//			   AssetId  int64
+//			   StrgNo   int
+//			   Addr     string
+//		  }
+func (t *AssetOper) genSelMaterialBody(param *xbase.SelMaterialParam) (string, error) {
+	v := url.Values{}
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("strg_no", fmt.Sprintf("%d", param.StrgNo))
+	v.Set("addr", param.Addr)
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) SelectMaterial(param *xbase.SelMaterialParam) (*xbase.SelMaterialResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+
+	body, err := t.genSelMaterialBody(param)
+	if err != nil {
+		t.Logger.Warn("fail to generate value for select material, err: %v, param: %+v", err, *param)
+		return nil, nil, err
+	}
+	res, err := t.Post(xbase.AssetApiSelectMaterial, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed.err:%v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.SelMaterialResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [select_cnt: %d] [token: %s] [url: %s] [request_id: %s] [trace_id: %s]",
+		len(resp.List), resp.Token, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+func (t *AssetOper) genComposeShardBody(consumeList []*xbase.AssetShardPair, param *xbase.ComposeParam) (string, error) {
+	if len(consumeList) < 1 {
+		return "", xbase.ErrParamInvalid
+	}
+
+	// build consume sign
+	astList := make([]*xbase.ConsumeNode, 0)
+	for _, shard := range consumeList {
+		//TODO need generate absolute uniq nonce
+		nonce := utils.GenNonce()
+		signMsg := fmt.Sprintf("%d%d", shard.AssetId, nonce)
+		sign, err := auth.XassetSignECDSA(param.Account.PrivateKey, []byte(signMsg))
+		if err != nil {
+			return "", xbase.ComErrAccountSignFailed
+		}
+		node := &xbase.ConsumeNode{
+			AssetId: shard.AssetId,
+			ShardId: shard.ShardId,
+			Nonce:   nonce,
+			Sign:    sign,
+		}
+		astList = append(astList, node)
+	}
+	jsAstList, err := json.Marshal(astList)
+	if err != nil {
+		return "", xbase.ComErrJsonMarFailed
+	}
+
+	//build grant sign
+	nonce := utils.GenNonce()
+	signMsg := fmt.Sprintf("%d%d", param.AssetId, nonce)
+	sign, err := auth.XassetSignECDSA(param.Account.PrivateKey, []byte(signMsg))
+	if err != nil {
+		return "", xbase.ComErrAccountSignFailed
+	}
+
+	v := url.Values{}
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("strg_no", fmt.Sprintf("%d", param.StrgNo))
+	v.Set("nonce", fmt.Sprintf("%d", nonce))
+	v.Set("addr", param.Account.Address)
+	v.Set("pkey", param.Account.PublicKey)
+	v.Set("sign", sign)
+	v.Set("uaddr", param.UAccount.Address)
+	v.Set("upkey", param.UAccount.PublicKey)
+	v.Set("ast_list", string(jsAstList))
+	v.Set("token", param.Token)
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) ComposeShard(consumeList []*xbase.AssetShardPair, param *xbase.ComposeParam) (*xbase.ComposeResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+
+	body, err := t.genComposeShardBody(consumeList, param)
+	if err != nil {
+		t.Logger.Warn("fail to generate value for compose shard, err: %v, param: %+v", err, *param)
+		return nil, nil, err
+	}
+	res, err := t.Post(xbase.AssetApiComposeShard, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed.err:%v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.ComposeResp
 	err = json.Unmarshal([]byte(res.Body), &resp)
 	if err != nil {
 		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
