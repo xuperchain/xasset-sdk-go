@@ -22,6 +22,8 @@ const (
 	AssetListShardsByAsset   = "/xasset/horae/v1/listsdsbyast"
 	AssetApiGetEvidenceInfo  = "/xasset/horae/v1/getevidenceinfo"
 	AssetApiListDiffByAddr   = "/xasset/horae/v1/listdiffbyaddr"
+	AssetApiSelectBoxAst 	 = "/xasset/horae/v1/selboxast"
+	AssetApiGrantBox 		 = "/xasset/horae/v1/grantbox"
 	FileApiGetStoken         = "/xasset/file/v1/getstoken"
 	ListAssetHistory         = "/xasset/horae/v1/history"
 
@@ -40,6 +42,46 @@ const (
 	VilgApiGetImg   = "/xasset/vilg/v1/getimg"
 	VilgApiBalance  = "/xasset/vilg/v1/balance"
 )
+
+type SelBoxAstParam struct {
+	AssetId int64
+	ShardId int64
+}
+
+func (t *SelBoxAstParam) Valid() error {
+	if t.AssetId < 1 || t.ShardId < 1 {
+		return ErrAssetInvalid
+	}
+	return nil
+}
+
+type SelBoxAstResp struct {
+	BaseResp
+	RealAstId int64  `json:"real_asset_id"`
+	Token 	  string `json:"token"`
+}
+
+type GrantBoxParam struct {
+	Token        string
+	UAccount 	 *auth.Account
+	CAccount 	 *auth.Account
+	RealAssetId  int64
+	BoxAssetId	 int64
+	UserId       int64
+}
+
+func (t *GrantBoxParam) Valid() error {
+	if t.Token == "" || t.UAccount == nil || t.CAccount == nil || t.RealAssetId < 1 || t.BoxAssetId < 1 {
+		return ErrAssetInvalid
+	}
+	return nil
+}
+
+type GrantBoxResp struct {
+	BaseResp
+	AssetId int64 `json:"asset_id"`
+	ShardId int64 `json:"shard_id"`
+}
 
 /////// Gen Token /////////
 type GetStokenParam struct {
@@ -112,15 +154,16 @@ type UploadFileResp struct {
 
 ///////// Create Asset ///////////
 type CreateAssetInfo struct {
-	AssetCate AssetType `json:"asset_cate"`
-	Title     string    `json:"title"`
-	Thumb     []string  `json:"thumb"`
-	ShortDesc string    `json:"short_desc"`
-	ImgDesc   []string  `json:"img_desc"`
-	AssetUrl  []string  `json:"asset_url"`
-	LongDesc  string    `json:"long_desc,omitempty"`
-	AssetExt  string    `json:"asset_ext,omitempty"`
-	GroupId   int64     `json:"group_id,omitempty"`
+	AssetCate 	AssetType `json:"asset_cate"`
+	Title     	string    `json:"title"`
+	Thumb     	[]string  `json:"thumb"`
+	ShortDesc 	string    `json:"short_desc"`
+	ImgDesc  	[]string  `json:"img_desc"`
+	AssetUrl  	[]string  `json:"asset_url"`
+	LongDesc  	string    `json:"long_desc,omitempty"`
+	AssetExt  	string    `json:"asset_ext,omitempty"`
+	GroupId   	int64     `json:"group_id,omitempty"`
+	ProcScript  string 	  `json:"proc_script,omitempty"`
 }
 
 func CreateAssetInfoValid(p *CreateAssetInfo) error {
@@ -181,15 +224,16 @@ type CreateAssetResp struct {
 
 ///////// Alter Asset //////////
 type AlterAssetInfo struct {
-	AssetCate AssetType `json:"asset_cate,omitempty"`
-	Title     string    `json:"title,omitempty"`
-	Thumb     []string  `json:"thumb,omitempty"`
-	ShortDesc string    `json:"short_desc,omitempty"`
-	ImgDesc   []string  `json:"img_desc,omitempty"`
-	AssetUrl  []string  `json:"asset_url,omitempty"`
-	LongDesc  string    `json:"long_desc,omitempty"`
-	AssetExt  string    `json:"asset_ext,omitempty"`
-	GroupId   int64     `json:"group_id,omitempty"`
+	AssetCate 	AssetType `json:"asset_cate,omitempty"`
+	Title     	string    `json:"title,omitempty"`
+	Thumb     	[]string  `json:"thumb,omitempty"`
+	ShortDesc 	string    `json:"short_desc,omitempty"`
+	ImgDesc   	[]string  `json:"img_desc,omitempty"`
+	AssetUrl  	[]string  `json:"asset_url,omitempty"`
+	LongDesc  	string    `json:"long_desc,omitempty"`
+	AssetExt  	string    `json:"asset_ext,omitempty"`
+	GroupId   	int64     `json:"group_id,omitempty"`
+	ProcScript  string 	  `json:"proc_script,omitempty"`
 }
 
 func AlterAssetInfoValid(p *AlterAssetInfo) error {
@@ -209,7 +253,7 @@ func AlterAssetInfoValid(p *AlterAssetInfo) error {
 	if !HasAssetType(p.AssetCate) &&
 		!HasDesc(p.Title) && !HasDesc(p.ShortDesc) && !HasDesc(p.LongDesc) && !HasDesc(p.AssetExt) &&
 		!HasImg(p.Thumb) && !HasImg(p.ImgDesc) && !HasImg(p.AssetUrl) &&
-		!HasId(p.GroupId) {
+		!HasId(p.GroupId) && !HasDesc(p.ProcScript) {
 		return ErrAlterInfo
 	}
 	return nil
@@ -611,7 +655,6 @@ type ConsumeShardParam struct {
 	UAddr    string        `json:"user_addr"`
 	USign    string        `json:"user_sign"`
 	UPKey    string        `json:"user_pkey"`
-	CAccount *auth.Account `json:"create_account"`
 }
 
 func (t *ConsumeShardParam) Valid() error {
@@ -625,9 +668,6 @@ func (t *ConsumeShardParam) Valid() error {
 		return err
 	}
 	if err := IdValid(t.Nonce); err != nil {
-		return err
-	}
-	if err := AccountValid(t.CAccount); err != nil {
 		return err
 	}
 	if err := AddrValid(t.UAddr); err != nil {

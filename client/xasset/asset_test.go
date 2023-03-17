@@ -266,7 +266,6 @@ func TestXasset(t *testing.T) {
 		UAddr:    AccountA.Address,
 		USign:    sign,
 		UPKey:    AccountA.PublicKey,
-		CAccount: AccountA,
 	}
 	_, _, err = handle.ConsumeShard(consumeParam)
 	if err != nil {
