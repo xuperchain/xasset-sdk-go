@@ -395,6 +395,7 @@ type HubOrderDetail struct {
 	Thumb       []string `json:"thumb"`
 	OriginPrice int      `json:"origin_price"`
 	PayPrice    int      `json:"pay_price"`
+	SinglePrice int 	`json:"single_price"`
 	TimeExpire  int64    `json:"time_expire"`
 	PayTime     int64    `json:"pay_time"`
 	CloseTime   int64    `json:"close_time"`
