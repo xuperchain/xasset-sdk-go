@@ -319,7 +319,7 @@ type HubCreateOrderParam struct {
 	ClientType int    `json:"client_type"`
 	Chan       int64  `json:"chan"`
 	Scene      int64  `json:"scene"`
-	BuyCount   int 	  `json:"buy_count"`
+	BuyCount   int    `json:"buy_count"`
 }
 
 func (p *HubCreateOrderParam) Valid() error {
@@ -395,12 +395,12 @@ type HubOrderDetail struct {
 	Thumb       []string `json:"thumb"`
 	OriginPrice int      `json:"origin_price"`
 	PayPrice    int      `json:"pay_price"`
-	SinglePrice int 	`json:"single_price"`
+	SinglePrice int      `json:"single_price"`
 	TimeExpire  int64    `json:"time_expire"`
 	PayTime     int64    `json:"pay_time"`
 	CloseTime   int64    `json:"close_time"`
 	Ctime       int64    `json:"ctime"`
-	BuyCount    int 	 `json:"buy_count"`
+	BuyCount    int      `json:"buy_count"`
 }
 
 type HubEditOrderParam struct {
@@ -510,7 +510,8 @@ func (p *CountOrderParam) Valid() error {
 }
 
 type CountOrderData struct {
-	Total int64 `json:"total"`
+	Total       int64 `json:"total"`
+	BuyCountSum int64 `json:"buy_count_sum"`
 }
 
 type CountOrderResp struct {
