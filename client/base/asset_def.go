@@ -46,6 +46,20 @@ const (
 	VilgApiBalance  = "/xasset/vilg/v1/balance"
 )
 
+type BoxAst struct {
+	AssetId int64 `json:"asset_id"`
+	Amount  int64 `json:"amount"`
+}
+
+func MakeBlindBoxScript(astList []*BoxAst) string {
+	argsByte, _ := json.Marshal(astList)
+	procScript := map[string]string{
+		"blind_box": string(argsByte),
+	}
+	scriptByte, _ := json.Marshal(procScript)
+	return string(scriptByte)
+}
+
 type SelBoxAstParam struct {
 	AssetId int64
 	ShardId int64
@@ -708,12 +722,13 @@ func (t *FreezeAssetParam) Valid() error {
 
 ////////// Consume Shard ////////////
 type ConsumeShardParam struct {
-	AssetId int64  `json:"asset_id"`
-	ShardId int64  `json:"shard_id"`
-	Nonce   int64  `json:"nonce"`
-	UAddr   string `json:"user_addr"`
-	USign   string `json:"user_sign"`
-	UPKey   string `json:"user_pkey"`
+	AssetId  int64         `json:"asset_id"`
+	ShardId  int64         `json:"shard_id"`
+	Nonce    int64         `json:"nonce"`
+	UAddr    string        `json:"user_addr"`
+	USign    string        `json:"user_sign"`
+	UPKey    string        `json:"user_pkey"`
+	CAccount *auth.Account `json:"create_account"`
 }
 
 func (t *ConsumeShardParam) Valid() error {
