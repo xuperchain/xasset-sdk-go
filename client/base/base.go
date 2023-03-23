@@ -46,8 +46,8 @@ const (
 	AssetCateTicket
 	// 4.酒店
 	AssetCateHotel
-	// 5.盲盒
-	AssetCateBlindBox
+	// 22.盲盒
+	AssetCateBlindBox = 22
 )
 
 // 列表分页范围限制
