@@ -29,7 +29,7 @@ const (
 	CountOrder       = "/xasset/trade/v1/count_order"
 )
 
-/////// Create Store /////////
+// ///// Create Store /////////
 type CreateOrAlterStoreParam struct {
 	StoreId   int    `json:"store_id"`
 	Name      string `json:"name"`
@@ -51,7 +51,7 @@ func (t *CreateOrAlterStoreParam) CreateValid() error {
 	return nil
 }
 
-////////// Query Store //////////
+// //////// Query Store //////////
 type BaseStoreParam struct {
 	StoreId int `json:"store_id"`
 }
@@ -92,7 +92,7 @@ type QueryStoreMeta struct {
 	Likes     int64  `json:"likes"`
 }
 
-/////// Create Act /////////
+// ///// Create Act /////////
 type CreateOrAlterActParam struct {
 	StoreId   int    `json:"store_id"`
 	ActId     int64  `json:"act_id"`
@@ -187,6 +187,7 @@ type ListActResp struct {
 
 type BindOrAlterAstParam struct {
 	AssetId   int64  `json:"asset_id"`
+	SplitId   int64  `json:"split_id"`
 	Amount    int    `json:"amount"`
 	ApplyForm int    `json:"apply_form"`
 	AssetCate int    `json:"asset_cate"`
@@ -253,6 +254,7 @@ type QueryActAstMeta struct {
 	AppId         int64    `json:"app_id"`
 	Addr          string   `json:"addr"`
 	AssetId       int64    `json:"asset_id"`
+	SplitId       int64    `json:"split_id"`
 	AssetCate     int      `json:"asset_cate"`
 	Thumb         []string `json:"thumb"`
 	Title         string   `json:"title"`
@@ -276,7 +278,7 @@ type QueryActAstMeta struct {
 	Mtime         int64    `json:"mtime"`
 }
 
-////////////// Trade Orders API /////////////
+// //////////// Trade Orders API /////////////
 const (
 	// ---------- Code Enum -----------
 	CodeBaiduSmartApp = 1001 // 百度收银台安卓端
@@ -292,7 +294,7 @@ var (
 	}
 )
 
-//////////// Create Orders ///////////////
+// ////////// Create Orders ///////////////
 type HubCreateOrderParam struct {
 	// 标记支付平台, 1001: 百度收银台-小程序 1002: 百度收银台-IOS 1003: 百度收银台-H5  2001: 第三方微信支付
 	Code int `json:"code"`
