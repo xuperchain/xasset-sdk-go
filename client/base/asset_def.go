@@ -100,6 +100,25 @@ type GrantBoxResp struct {
 	ShardId int64 `json:"shard_id"`
 }
 
+type ComposeStrg struct {
+	StrgNo int        `json:"strg_no"`
+	Strg   []Material `json:"strg"`
+}
+
+type Material struct {
+	AssetId int64 `json:"id"`
+	Need    int   `json:"need"`
+}
+
+func MakeComposeScript(astList []*ComposeStrg) string {
+	argsByte, _ := json.Marshal(astList)
+	procScript := map[string]string{
+		"compose": string(argsByte),
+	}
+	scriptByte, _ := json.Marshal(procScript)
+	return string(scriptByte)
+}
+
 type SelMaterialParam struct {
 	AssetId int64
 	StrgNo  int
