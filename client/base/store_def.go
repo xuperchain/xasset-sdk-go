@@ -284,6 +284,7 @@ const (
 	CodeBaiduSmartApp = 1001 // 百度收银台安卓端
 	CodeBaiduIOS      = 1002 // 百度收银台IOS端
 	CodeBaiduH5       = 1003 // 百度收银台H5
+	CodeBillingH5     = 1004 // 百度billing H5支付
 )
 
 var (
@@ -291,12 +292,13 @@ var (
 		CodeBaiduSmartApp: struct{}{},
 		CodeBaiduIOS:      struct{}{},
 		CodeBaiduH5:       struct{}{},
+		CodeBillingH5:     struct{}{},
 	}
 )
 
 // ////////// Create Orders ///////////////
 type HubCreateOrderParam struct {
-	// 标记支付平台, 1001: 百度收银台-小程序 1002: 百度收银台-IOS 1003: 百度收银台-H5  2001: 第三方微信支付
+	// 标记支付平台, 1001: 百度收银台-小程序 1002: 百度收银台-IOS 1003: 百度收银台-H5 1004: 百度billing-H5 2001: 第三方微信支付
 	Code int `json:"code"`
 	// 订单类型, 1:PGC商城订单
 	OrderType int `json:"order_type"`
