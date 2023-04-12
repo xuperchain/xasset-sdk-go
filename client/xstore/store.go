@@ -469,6 +469,7 @@ func (t *StoreOper) genBindOrAlterAstBody(param *xbase.BindOrAlterAstParam) (str
 	v := url.Values{}
 	v.Set("act_id", fmt.Sprintf("%d", param.ActId))
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("split_id", fmt.Sprintf("%d", param.SplitId))
 	v.Set("asset_cate", fmt.Sprintf("%d", param.AssetCate))
 	v.Set("start", fmt.Sprintf("%d", param.Start))
 	v.Set("end", fmt.Sprintf("%d", param.End))
