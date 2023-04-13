@@ -1088,6 +1088,44 @@ func (t *StoreOper) CountOrder(param *xbase.CountOrderParam) (*xbase.CountOrderR
 	return &resp, res, nil
 }
 
+// SumOrderPrice sum valid orders price.
+func (t *StoreOper) SumOrderPrice(param *xbase.SumOrderPriceParam) (*xbase.SumOrderPriceResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, xbase.ErrParamInvalid
+	}
+	v := url.Values{}
+	v.Set("status", fmt.Sprintf("%d", param.Status))
+
+	body := v.Encode()
+	res, err := t.Post(xbase.SumOrderPrice, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.SumOrderPrice, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.SumOrderPriceResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [param: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
 func (t *StoreOper) GenSecretData(data string) (string, error) {
 	input := fmt.Sprintf("%d_%s_%s", t.Cfg.Credentials.AppId, t.Cfg.Credentials.AccessKeyId, t.Cfg.Credentials.SecretAccessKey)
 	h := md5.New()
