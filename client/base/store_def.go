@@ -27,7 +27,7 @@ const (
 	HubListOrder     = "/xasset/trade/v1/order_list"
 	HubListOrderPage = "/xasset/trade/v1/order_page"
 	CountOrder       = "/xasset/trade/v1/count_order"
-	SumOrderPrice = "/xasset/trade/v1/sum_order_price"
+	SumOrderPrice    = "/xasset/trade/v1/sum_order_price"
 )
 
 // ///// Create Store /////////
@@ -525,7 +525,7 @@ type CountOrderResp struct {
 }
 
 type SumOrderPriceParam struct {
-	Status  int   `json:"status"`
+	Status int `json:"status"`
 }
 
 func (p *SumOrderPriceParam) Valid() error {
@@ -536,7 +536,7 @@ func (p *SumOrderPriceParam) Valid() error {
 }
 
 type SumOrderPriceData struct {
-	TotalPrice       int64 `json:"total_price"`
+	TotalPrice int64 `json:"total_price"`
 }
 
 type SumOrderPriceResp struct {
