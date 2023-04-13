@@ -260,12 +260,12 @@ func TestXasset(t *testing.T) {
 	signMsg := fmt.Sprintf("%d%d", assetId, nonce)
 	sign, _ := auth.XassetSignECDSA(AccountA.PrivateKey, []byte(signMsg))
 	consumeParam := &base.ConsumeShardParam{
-		AssetId:  assetId,
-		ShardId:  shardId,
-		Nonce:    nonce,
-		UAddr:    AccountA.Address,
-		USign:    sign,
-		UPKey:    AccountA.PublicKey,
+		AssetId: assetId,
+		ShardId: shardId,
+		Nonce:   nonce,
+		UAddr:   AccountA.Address,
+		USign:   sign,
+		UPKey:   AccountA.PublicKey,
 	}
 	_, _, err = handle.ConsumeShard(consumeParam)
 	if err != nil {
