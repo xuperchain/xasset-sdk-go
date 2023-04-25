@@ -441,6 +441,7 @@ type QueryAssetMeta struct {
 	Ctime      int64      `json:"ctime"`
 	Mtime      int64      `json:"mtime"`
 	TxId       string     `json:"tx_id"`
+	ProcScript string     `json:"proc_script"`
 }
 
 ////////// Grant Asset /////////////
