@@ -849,6 +849,7 @@ func (t *StoreOper) ConfirmOrder(param *xbase.HubConfirmH5OrderParam, auth strin
 	v.Set("order_type", fmt.Sprintf("%d", param.OrderType))
 	v.Set("oid", fmt.Sprintf("%d", param.Oid))
 	v.Set("client_type", fmt.Sprintf("%d", param.ClientType))
+	v.Set("creator_details", param.Details)
 	v.Set("signed_auth", secretAuth)
 	body := v.Encode()
 	res, err := t.Post(xbase.HubConfirmOrder, body)

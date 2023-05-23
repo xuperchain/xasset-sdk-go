@@ -2,6 +2,7 @@ package base
 
 import (
 	"encoding/json"
+	"fmt"
 	"unicode/utf8"
 
 	"github.com/xuperchain/xasset-sdk-go/auth"
@@ -26,6 +27,8 @@ const (
 	AssetApiGrantBox         = "/xasset/horae/v1/grantbox"
 	AssetApiSelectMaterial   = "/xasset/horae/v1/selmaterial"
 	AssetApiComposeShard     = "/xasset/horae/v1/compose"
+	AssetApiUpgradeAst       = "/xasset/horae/v1/upgradeast"
+	AssetApiUpgradeSds       = "/xasset/horae/v1/upgradesds"
 
 	FileApiGetStoken = "/xasset/file/v1/getstoken"
 	ListAssetHistory = "/xasset/horae/v1/history"
@@ -281,13 +284,15 @@ func CreateAssetInfoValid(p *CreateAssetInfo) error {
 }
 
 type CreateAssetParam struct {
-	AssetId   int64            `json:"asset_id"` // optional
-	Price     int64            `json:"price,omitempty"`
-	Amount    int              `json:"amount"`
-	AssetInfo *CreateAssetInfo `json:"asset_info"`
-	Account   *auth.Account    `json:"account"`
-	UserId    int64            `json:"user_id,omitempty"`
-	FileHash  string           `json:"file_hash,omitempty"`
+	AssetId    int64            `json:"asset_id"` // optional
+	Price      int64            `json:"price,omitempty"`
+	Amount     int              `json:"amount"`
+	AssetInfo  *CreateAssetInfo `json:"asset_info"`
+	Account    *auth.Account    `json:"account"`
+	UserId     int64            `json:"user_id,omitempty"`
+	FileHash   string           `json:"file_hash,omitempty"`
+	ViewType   int              `json:"view_type"`
+	AssetParam string           `json:"asset_param"`
 }
 
 func (t *CreateAssetParam) Valid() error {
@@ -358,6 +363,7 @@ type AlterAssetParam struct {
 	FileHash  string          `json:"file_hash"`
 	AssetInfo *AlterAssetInfo `json:"asset_info"`
 	Account   *auth.Account   `json:"account"`
+	ViewType  int             `json:"view_type"`
 }
 
 // AlterAssetParam be valid where has the amount or thr asset info to be altered.
@@ -442,17 +448,21 @@ type QueryAssetMeta struct {
 	Mtime      int64      `json:"mtime"`
 	TxId       string     `json:"tx_id"`
 	ProcScript string     `json:"proc_script"`
+	Version    int64      `json:"version"`
+	ViewType   int        `json:"view_type"`
+	AssetParam string     `json:"asset_param"`
 }
 
 ////////// Grant Asset /////////////
 type GrantAssetParam struct {
-	AssetId  int64         `json:"asset_id"`
-	ShardId  int64         `json:"shard_id"`
-	Price    int64         `json:"price,omitempty"`
-	Account  *auth.Account `json:"account"`
-	Addr     string        `json:"addr"`
-	ToAddr   string        `json:"to_addr"`
-	ToUserId int64         `json:"to_userid,omitempty"`
+	AssetId    int64         `json:"asset_id"`
+	ShardId    int64         `json:"shard_id"`
+	Price      int64         `json:"price,omitempty"`
+	Account    *auth.Account `json:"account"`
+	Addr       string        `json:"addr"`
+	ToAddr     string        `json:"to_addr"`
+	ToUserId   int64         `json:"to_userid,omitempty"`
+	ShardParam string        `json:"shard_param"`
 }
 
 func (p *GrantAssetParam) Valid() error {
@@ -508,20 +518,24 @@ type QueryShardResp struct {
 }
 
 type QueryShardMeta struct {
-	AssetId   int64           `json:"asset_id"`
-	ShardId   int64           `json:"shard_id"`
-	Price     int64           `json:"price"`
-	OwnerAddr string          `json:"owner_addr"`
-	Status    int             `json:"status"`
-	TxId      string          `json:"tx_id"`
-	AssetInfo *ShardAssetInfo `json:"asset_info"`
-	Ctime     int64           `json:"ctime"`
+	AssetId    int64           `json:"asset_id"`
+	ShardId    int64           `json:"shard_id"`
+	Price      int64           `json:"price"`
+	OwnerAddr  string          `json:"owner_addr"`
+	Status     int             `json:"status"`
+	TxId       string          `json:"tx_id"`
+	AssetInfo  *ShardAssetInfo `json:"asset_info"`
+	Ctime      int64           `json:"ctime"`
+	Version    int64           `json:"version"`
+	ShardParam string          `json:"shard_param"`
 }
 
 type ShardAssetInfo struct {
 	Title      string     `json:"title"`
 	AssetCate  int        `json:"asset_cate"`
 	Thumb      []ThumbMap `json:"thumb"`
+	AssetUrl   []string   `json:"asset_url"`
+	AssetExt   string     `json:"asset_ext"`
 	ShortDesc  string     `json:"short_desc"`
 	CreateAddr string     `json:"create_addr"`
 	GroupId    int64      `json:"group_id"`
@@ -808,6 +822,48 @@ type ListAssetHistoryResp struct {
 	TotalCnt int            `json:"total_cnt"`
 	Cursor   string         `json:"cursor"`
 	HasMore  int            `json:"has_more"`
+}
+
+////////// Upgrade Asset ////////////
+type UpgradeAstParam struct {
+	AssetId    int64  `json:"asset_id"`
+	AssetParam string `json:"asset_param"`
+}
+
+func (t *UpgradeAstParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := AssetIdValid(t.AssetId); err != nil {
+		return err
+	}
+	if !HasDesc(t.AssetParam) {
+		return fmt.Errorf("asset_param is nil")
+	}
+	return nil
+}
+
+////////// Upgrade Shard ////////////
+type UpgradeSdsParam struct {
+	AssetId    int64  `json:"asset_id"`
+	ShardId    int64  `json:"shard_id"`
+	ShardParam string `json:"shard_param"`
+}
+
+func (t *UpgradeSdsParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := AssetIdValid(t.AssetId); err != nil {
+		return err
+	}
+	if err := AssetIdValid(t.ShardId); err != nil {
+		return err
+	}
+	if !HasDesc(t.ShardParam) {
+		return fmt.Errorf("shard_param is nil")
+	}
+	return nil
 }
 
 ////////// Scene ListShardByAddr ////////////

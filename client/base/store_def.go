@@ -359,6 +359,8 @@ type HubConfirmH5OrderParam struct {
 	OrderType  int   `json:"order_type"`
 	Oid        int64 `json:"oid"`
 	ClientType int   `json:"client_type"`
+	// object，其余支付参数的序列化值，标记剩余的非通用参数
+	Details string `json:"creator_details"`
 }
 
 func (p *HubConfirmH5OrderParam) Valid() error {
