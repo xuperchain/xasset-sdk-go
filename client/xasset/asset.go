@@ -187,6 +187,8 @@ func (t *AssetOper) genCreateAssetBody(appid int64, param *xbase.CreateAssetPara
 	v.Set("sign", sign)
 	v.Set("pkey", param.Account.PublicKey)
 	v.Set("nonce", fmt.Sprintf("%d", nonce))
+	v.Set("view_type", fmt.Sprintf("%d", param.ViewType))
+	v.Set("param", param.AssetParam)
 	if err := xbase.IdValid(param.UserId); err == nil {
 		v.Set("user_id", fmt.Sprintf("%d", param.UserId))
 	}
@@ -268,6 +270,9 @@ func (t *AssetOper) genAlterAssetBody(param *xbase.AlterAssetParam) (string, err
 	}
 	if err := xbase.AmountInvalid(param.Amount); err == nil {
 		v.Set("amount", fmt.Sprintf("%d", param.Amount))
+	}
+	if err := xbase.AmountInvalid(param.ViewType); err == nil {
+		v.Set("view_type", fmt.Sprintf("%d", param.ViewType))
 	}
 	if err := xbase.AlterAssetInfoValid(param.AssetInfo); err == nil {
 		assetInfo, err := json.Marshal(param.AssetInfo)
@@ -586,6 +591,7 @@ func (t *AssetOper) genGrantAssetBody(appid int64, param *xbase.GrantAssetParam)
 	v.Set("pkey", param.Account.PublicKey)
 	v.Set("nonce", fmt.Sprintf("%d", nonce))
 	v.Set("to_addr", param.ToAddr)
+	v.Set("param", param.ShardParam)
 	if err := xbase.IdValid(param.ToUserId); err == nil {
 		v.Set("to_userid", fmt.Sprintf("%d", param.ToUserId))
 	}
@@ -1259,6 +1265,112 @@ func (t *AssetOper) SelectMaterial(param *xbase.SelMaterialParam) (*xbase.SelMat
 
 	t.Logger.Trace("operate succ. [select_cnt: %d] [token: %s] [url: %s] [request_id: %s] [trace_id: %s]",
 		len(resp.List), resp.Token, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// genUpgradeAstBody uses the general parameter as follows,
+//
+//	   {
+//			   AssetId  	int64
+//			   AssetParam   string
+//		  }
+func (t *AssetOper) genUpgradeAstBody(param *xbase.UpgradeAstParam) (string, error) {
+	v := url.Values{}
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("param", param.AssetParam)
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) UpgradeAst(param *xbase.UpgradeAstParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+
+	body, err := t.genUpgradeAstBody(param)
+	if err != nil {
+		t.Logger.Warn("fail to generate value for upgrade asset, err: %v, param: %+v", err, *param)
+		return nil, nil, err
+	}
+	res, err := t.Post(xbase.AssetApiUpgradeAst, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed.err:%v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BaseResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [url: %s] [request_id: %s] [trace_id: %s]", res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// genUpgradeSdsBody uses the general parameter as follows,
+//
+//	   {
+//			   AssetId  	int64
+//			   ShardId   	int64
+//			   ShardParam   string
+//		  }
+func (t *AssetOper) genUpgradeSdsBody(param *xbase.UpgradeSdsParam) (string, error) {
+	v := url.Values{}
+	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
+	v.Set("shard_id", fmt.Sprintf("%d", param.ShardId))
+	v.Set("param", param.ShardParam)
+	body := v.Encode()
+	return body, nil
+}
+
+func (t *AssetOper) UpgradeSds(param *xbase.UpgradeSdsParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+
+	body, err := t.genUpgradeSdsBody(param)
+	if err != nil {
+		t.Logger.Warn("fail to generate value for upgrade shard, err: %v, param: %+v", err, *param)
+		return nil, nil, err
+	}
+	res, err := t.Post(xbase.AssetApiUpgradeSds, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed.err:%v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BaseResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ.[url: %s] [request_id: %s] [trace_id: %s]", res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
 	return &resp, res, nil
 }
 
