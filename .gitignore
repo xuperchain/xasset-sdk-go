@@ -1,2 +1,4 @@
 .idea/
 tests/
+go.mod
+go.sum

@@ -28,6 +28,9 @@ const (
 	HubListOrderPage = "/xasset/trade/v1/order_page"
 	CountOrder       = "/xasset/trade/v1/count_order"
 	SumOrderPrice    = "/xasset/trade/v1/sum_order_price"
+
+	QueryRefund      = "/xasset/trade/v1/qryrefund"
+	QueryRefundPage  = "/xasset/trade/v1/listrefundbystore"
 )
 
 // ///// Create Store /////////
@@ -544,4 +547,70 @@ type SumOrderPriceData struct {
 type SumOrderPriceResp struct {
 	BaseResp
 	Data SumOrderPriceData `json:"data"`
+}
+
+type RefundInfo struct {
+	Rid          int64    `json:"rid"`
+	Oid          int64    `json:"oid"`
+	UK           int64    `json:"uk"`
+	BuyerAddr    string   `json:"buyer_addr"`
+	AssetId      int64    `json:"asset_id"`
+	ShardIds     []int64  `json:"shard_ids"`
+	Title        string   `json:"title"`
+	Thumb        []string `json:"thumb"`
+	SinglePrice  int      `json:"single_price"`
+	PayPrice     int      `json:"pay_price"`
+	Count        int      `json:"count"`
+	Reason       string   `json:"reason"`
+	Message      string   `json:"message"`
+	RefundStatus int      `json:"refund_status"`
+	Rtime        int64    `json:"rtime"`
+	Ctime        int64    `json:"ctime"`
+}
+
+type QueryRefundParam struct {
+	Rid int64 `json:"rid"`
+}
+
+func (p *QueryRefundParam) Valid() error {
+	if p.Rid <= 0 {
+		return fmt.Errorf("rid invalid")
+	}
+	return nil
+}
+
+type QueryRefundResp struct {
+	BaseResp
+	Data RefundInfo `json:"data"`
+}
+
+type QueryRefundPageParam struct {
+	Address      string `json:"address"`
+	StoreId      int64  `json:"store_id"`
+	RefundStatus string `json:"refund_status"`
+	Page         int    `json:"page"`
+	Size         int    `json:"limit"`
+}
+
+func (p *QueryRefundPageParam) Valid() error {
+	if p.StoreId < 0 {
+		return fmt.Errorf("store_id invalid")
+	}
+	if p.Page <= 0 {
+		return fmt.Errorf("cursor page invalid")
+	}
+	if p.Size < 0 {
+		return fmt.Errorf("cursor size invalid")
+	}
+	return nil
+}
+
+type RefundPageData struct {
+	List        []*RefundInfo `json:"list"`
+	TotalAmount int           `json:"total_amount"`
+}
+
+type QueryRefundPageResp struct {
+	BaseResp
+	Data RefundPageData `json:"data"`
 }
