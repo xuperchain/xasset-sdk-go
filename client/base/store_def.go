@@ -552,7 +552,6 @@ type SumOrderPriceResp struct {
 type RefundInfo struct {
 	Rid          int64    `json:"rid"`
 	Oid          int64    `json:"oid"`
-	UK           int64    `json:"uk"`
 	BuyerAddr    string   `json:"buyer_addr"`
 	AssetId      int64    `json:"asset_id"`
 	ShardIds     []int64  `json:"shard_ids"`
