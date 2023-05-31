@@ -538,6 +538,7 @@ func (p *SumOrderPriceParam) Valid() error {
 }
 
 type SumOrderPriceData struct {
+	TotalCnt   int64 `json:"total_cnt"`
 	TotalPrice int64 `json:"total_price"`
 }
 
