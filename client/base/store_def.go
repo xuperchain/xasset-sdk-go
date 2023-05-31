@@ -703,6 +703,7 @@ func (p *QueryRefundPageParam) Valid() error {
 	if p.Size < 0 {
 		return fmt.Errorf("cursor size invalid")
 	}
+	return nil
 }
 
 type RefundPageData struct {
