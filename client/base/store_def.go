@@ -539,12 +539,17 @@ type CountOrderResp struct {
 }
 
 type SumOrderPriceParam struct {
-	Status int `json:"status"`
+	Status int   `json:"status"`
+	End    int64 `json:"end"`
+	Start  int64 `json:"start"`
 }
 
 func (p *SumOrderPriceParam) Valid() error {
 	if p.Status < 0 {
 		return fmt.Errorf("status invalid")
+	}
+	if p.End < p.Start {
+		return fmt.Errorf("end must be larger than start")
 	}
 	return nil
 }
