@@ -1096,6 +1096,12 @@ func (t *StoreOper) SumOrderPrice(param *xbase.SumOrderPriceParam) (*xbase.SumOr
 	}
 	v := url.Values{}
 	v.Set("status", fmt.Sprintf("%d", param.Status))
+	if param.End > 0 {
+		v.Set("end", fmt.Sprintf("%d", param.End))
+	}
+	if param.Start > 0 {
+		v.Set("start", fmt.Sprintf("%d", param.Start))
+	}
 
 	body := v.Encode()
 	res, err := t.Post(xbase.SumOrderPrice, body)
