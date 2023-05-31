@@ -404,8 +404,12 @@ type HubOrderDetail struct {
 	ShardIds    []int64  `json:"shard_ids"`
 	BuyerAddr   string   `json:"buyer_addr"`
 	Status      int      `json:"status"`
+	RefStatus   int      `json:"refund_status"`
+	Rid         int64    `json:"rid"`
 	Title       string   `json:"title"`
 	Thumb       []string `json:"thumb"`
+	StoreId     int64    `json:"store_id"`
+	StoreName   string   `json:"store_name"`
 	OriginPrice int      `json:"origin_price"`
 	PayPrice    int      `json:"pay_price"`
 	SinglePrice int      `json:"single_price"`
