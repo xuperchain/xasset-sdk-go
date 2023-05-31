@@ -29,6 +29,9 @@ const (
 	AssetApiComposeShard     = "/xasset/horae/v1/compose"
 	AssetApiUpgradeAst       = "/xasset/horae/v1/upgradeast"
 	AssetApiUpgradeSds       = "/xasset/horae/v1/upgradesds"
+	AssetApiLockShard        = "/xasset/horae/v1/locksds"
+	AssetApiFreezeShard      = "/xasset/horae/v1/freezesds"
+	AssetApiUnfreezeShard    = "/xasset/horae/v1/unfreezesds"
 
 	FileApiGetStoken = "/xasset/file/v1/getstoken"
 	ListAssetHistory = "/xasset/horae/v1/history"
@@ -862,6 +865,33 @@ func (t *UpgradeSdsParam) Valid() error {
 	}
 	if !HasDesc(t.ShardParam) {
 		return fmt.Errorf("shard_param is nil")
+	}
+	return nil
+}
+
+////////// Lock or freeze Shard ////////////
+type LockOrFreezeShardParam struct {
+	AssetId int64
+	ShardId int64
+	OpType  int
+	Account *auth.Account
+}
+
+func (t *LockOrFreezeShardParam) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+	if err := AssetIdValid(t.AssetId); err != nil {
+		return err
+	}
+	if err := AssetIdValid(t.ShardId); err != nil {
+		return err
+	}
+	if err := AmountInvalid(t.OpType); err != nil {
+		return err
+	}
+	if err := AccountValid(t.Account); err != nil {
+		return err
 	}
 	return nil
 }

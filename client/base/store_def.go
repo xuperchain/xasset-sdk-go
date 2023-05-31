@@ -29,8 +29,13 @@ const (
 	CountOrder       = "/xasset/trade/v1/count_order"
 	SumOrderPrice    = "/xasset/trade/v1/sum_order_price"
 
-	QueryRefund      = "/xasset/trade/v1/qryrefund"
-	QueryRefundPage  = "/xasset/trade/v1/listrefundbystore"
+	CheckRefund     = "/xasset/trade/v1/checkrefund"
+	CreateRefund    = "/xasset/trade/v1/refund"
+	CancelRefund    = "/xasset/trade/v1/cancelrefund"
+	ConfirmRefund   = "/xasset/trade/v1/confirmrefund"
+	RefuseRefund    = "/xasset/trade/v1/refuserefund"
+  QueryRefund     = "/xasset/trade/v1/qryrefund"
+	QueryRefundPage = "/xasset/trade/v1/listrefundbystore"
 )
 
 // ///// Create Store /////////
@@ -401,8 +406,12 @@ type HubOrderDetail struct {
 	ShardIds    []int64  `json:"shard_ids"`
 	BuyerAddr   string   `json:"buyer_addr"`
 	Status      int      `json:"status"`
+	RefStatus   int      `json:"refund_status"`
+	Rid         int64    `json:"rid"`
 	Title       string   `json:"title"`
 	Thumb       []string `json:"thumb"`
+	StoreId     int64    `json:"store_id"`
+	StoreName   string   `json:"store_name"`
 	OriginPrice int      `json:"origin_price"`
 	PayPrice    int      `json:"pay_price"`
 	SinglePrice int      `json:"single_price"`
@@ -541,12 +550,105 @@ func (p *SumOrderPriceParam) Valid() error {
 }
 
 type SumOrderPriceData struct {
+	TotalCnt   int64 `json:"total_cnt"`
 	TotalPrice int64 `json:"total_price"`
 }
 
 type SumOrderPriceResp struct {
 	BaseResp
 	Data SumOrderPriceData `json:"data"`
+}
+
+type CheckRefundParam struct {
+	Oid int64 `json:"oid"`
+}
+
+func (p *CheckRefundParam) Valid() error {
+	if p.Oid < 1 {
+		return fmt.Errorf("oid invalid")
+	}
+	return nil
+}
+
+type CheckRefundData struct {
+	Refundable   int `json:"refundable"`
+	RefuseReason int `json:"refuse_reason"`
+}
+
+type CheckRefundResp struct {
+	BaseResp
+	Data CheckRefundData `json:"data"`
+}
+
+type CreateRefundParam struct {
+	Oid     int64  `json:"oid"`
+	Address string `json:"address"`
+	Reason  string `json:"reason"`
+}
+
+func (p *CreateRefundParam) Valid() error {
+	if p.Oid < 1 {
+		return fmt.Errorf("oid invalid")
+	}
+	return nil
+}
+
+type CreateRefundData struct {
+	Rid          int64 `json:"rid"`
+	Refundable   int   `json:"refundable"`
+	RefuseReason int   `json:"refuse_reason"`
+}
+
+type CreateRefundResp struct {
+	BaseResp
+	Data CreateRefundData `json:"data"`
+}
+
+type CancelRefundParam struct {
+	Rid     int64  `json:"oid"`
+	Address string `json:"address"`
+}
+
+func (p *CancelRefundParam) Valid() error {
+	if p.Rid < 1 {
+		return fmt.Errorf("rid invalid")
+	}
+	return nil
+}
+
+type CancelRefundData struct {
+	Rid int64 `json:"rid"`
+}
+
+type CancelRefundResp struct {
+	BaseResp
+	Data CancelRefundData `json:"data"`
+}
+
+type ConfirmRefundParam struct {
+	Rid      int64  `json:"rid"`
+	Message  string `json:"message"`
+	Operator string `json:"operator"`
+}
+
+func (p *ConfirmRefundParam) Valid() error {
+	if p.Rid < 1 {
+		return fmt.Errorf("rid invalid")
+	}
+	return nil
+}
+
+type RefuseRefundParam struct {
+	Rid      int64  `json:"rid"`
+	Message  string `json:"message"`
+	Operator string `json:"operator"`
+}
+
+func (p *RefuseRefundParam) Valid() error {
+	if p.Rid < 1 {
+		return fmt.Errorf("rid invalid")
+	}
+	return nil
 }
 
 type RefundInfo struct {
@@ -574,13 +676,13 @@ type QueryRefundParam struct {
 func (p *QueryRefundParam) Valid() error {
 	if p.Rid <= 0 {
 		return fmt.Errorf("rid invalid")
-	}
-	return nil
+  }
+  return nil
 }
 
 type QueryRefundResp struct {
 	BaseResp
-	Data RefundInfo `json:"data"`
+  Data RefundInfo `json:"data"`
 }
 
 type QueryRefundPageParam struct {
@@ -600,8 +702,7 @@ func (p *QueryRefundPageParam) Valid() error {
 	}
 	if p.Size < 0 {
 		return fmt.Errorf("cursor size invalid")
-	}
-	return nil
+  }
 }
 
 type RefundPageData struct {

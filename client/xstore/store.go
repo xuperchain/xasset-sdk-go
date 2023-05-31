@@ -1136,18 +1136,18 @@ func (t *StoreOper) GenSecretData(data string) (string, error) {
 	return utils.AesEncode(data, key)
 }
 
-// QueryRefund query refundinfo by refund id.
-func (t *StoreOper) QueryRefund(param *xbase.QueryRefundParam) (*xbase.QueryRefundResp, *xbase.RequestRes, error) {
+// CheckRefund check order refundable
+func (t *StoreOper) CheckRefund(param *xbase.CheckRefundParam) (*xbase.CheckRefundResp, *xbase.RequestRes, error) {
 	if err := param.Valid(); err != nil {
 		return nil, nil, xbase.ErrParamInvalid
 	}
 	v := url.Values{}
-	v.Set("rid", fmt.Sprintf("%d", param.Rid))
+	v.Set("oid", fmt.Sprintf("%d", param.Oid))
 
 	body := v.Encode()
-	res, err := t.Post(xbase.QueryRefund, body)
+	res, err := t.Post(xbase.CheckRefund, body)
 	if err != nil {
-		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.QueryRefund, err)
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.SumOrderPrice, err)
 		return nil, nil, xbase.ComErrRequsetFailed
 	}
 	if res.HttpCode != 200 {
@@ -1156,8 +1156,207 @@ func (t *StoreOper) QueryRefund(param *xbase.QueryRefundParam) (*xbase.QueryRefu
 		return nil, nil, xbase.ComErrRespCodeErr
 	}
 
-	var resp xbase.QueryRefundResp
+	var resp xbase.CheckRefundResp
 	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [param: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// CreateRefund create a refund order
+func (t *StoreOper) CreateRefund(param *xbase.CreateRefundParam) (*xbase.CreateRefundResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, xbase.ErrParamInvalid
+	}
+	v := url.Values{}
+	v.Set("oid", fmt.Sprintf("%d", param.Oid))
+	v.Set("address", param.Address)
+	v.Set("reason", param.Reason)
+
+	body := v.Encode()
+	res, err := t.Post(xbase.CreateRefund, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.SumOrderPrice, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.CreateRefundResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [param: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// CancelRefund cancel a refund order
+func (t *StoreOper) CancelRefund(param *xbase.CancelRefundParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
+
+	if err := param.Valid(); err != nil {
+		return nil, nil, xbase.ErrParamInvalid
+	}
+	v := url.Values{}
+
+	v.Set("rid", fmt.Sprintf("%d", param.Rid))
+	v.Set("address", param.Address)
+
+	body := v.Encode()
+	res, err := t.Post(xbase.CancelRefund, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.SumOrderPrice, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BaseResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [param: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// ConfirmRefund pass a refund order
+func (t *StoreOper) ConfirmRefund(param *xbase.ConfirmRefundParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, xbase.ErrParamInvalid
+	}
+	v := url.Values{}
+	v.Set("rid", fmt.Sprintf("%d", param.Rid))
+	v.Set("message", param.Message)
+	v.Set("operator", param.Operator)
+
+	body := v.Encode()
+	res, err := t.Post(xbase.ConfirmRefund, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.SumOrderPrice, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BaseResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [param: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// RefuseRefund refuse a refund order
+func (t *StoreOper) RefuseRefund(param *xbase.RefuseRefundParam) (*xbase.BaseResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, xbase.ErrParamInvalid
+	}
+	v := url.Values{}
+	v.Set("rid", fmt.Sprintf("%d", param.Rid))
+	v.Set("message", param.Message)
+	v.Set("operator", param.Operator)
+
+	body := v.Encode()
+	res, err := t.Post(xbase.RefuseRefund, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.SumOrderPrice, err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.BaseResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [param: %+v] [url: %s] [request_id: %s] [trace_id: %s]",
+		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
+// QueryRefund query refundinfo by refund id.
+func (t *StoreOper) QueryRefund(param *xbase.QueryRefundParam) (*xbase.QueryRefundResp, *xbase.RequestRes, error) {
+  if err := param.Valid(); err != nil {
+		return nil, nil, xbase.ErrParamInvalid
+	}
+	v := url.Values{}
+  v.Set("rid", fmt.Sprintf("%d", param.Rid))
+
+	body := v.Encode()
+	res, err := t.Post(xbase.QueryRefund, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.QueryRefund, err)
+    return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+  
+  var resp xbase.QueryRefundResp
+  err = json.Unmarshal([]byte(res.Body), &resp)
 	if err != nil {
 		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
 			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
@@ -1176,11 +1375,11 @@ func (t *StoreOper) QueryRefund(param *xbase.QueryRefundParam) (*xbase.QueryRefu
 
 // QueryRefundPage query refundinfo return by page.
 func (t *StoreOper) QueryRefundPage(param *xbase.QueryRefundPageParam) (*xbase.QueryRefundPageResp, *xbase.RequestRes, error) {
-	if err := param.Valid(); err != nil {
+  if err := param.Valid(); err != nil {
 		return nil, nil, xbase.ErrParamInvalid
 	}
 	v := url.Values{}
-	v.Set("address", param.Address)
+  v.Set("address", param.Address)
 	v.Set("store_id", fmt.Sprintf("%d", param.StoreId))
 	if param.RefundStatus != "" {
 		v.Set("refund_status", param.RefundStatus)
@@ -1194,16 +1393,16 @@ func (t *StoreOper) QueryRefundPage(param *xbase.QueryRefundPageParam) (*xbase.Q
 	res, err := t.Post(xbase.QueryRefundPage, body)
 	if err != nil {
 		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.QueryRefundPage, err)
-		return nil, nil, xbase.ComErrRequsetFailed
+    return nil, nil, xbase.ComErrRequsetFailed
 	}
 	if res.HttpCode != 200 {
 		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
 			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
 		return nil, nil, xbase.ComErrRespCodeErr
 	}
-
-	var resp xbase.QueryRefundPageResp
-	err = json.Unmarshal([]byte(res.Body), &resp)
+  
+  var resp xbase.QueryRefundPageResp
+  err = json.Unmarshal([]byte(res.Body), &resp)
 	if err != nil {
 		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
 			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
@@ -1219,3 +1418,4 @@ func (t *StoreOper) QueryRefundPage(param *xbase.QueryRefundPageParam) (*xbase.Q
 		param, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
 	return &resp, res, nil
 }
+
