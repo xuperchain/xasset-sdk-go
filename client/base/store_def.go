@@ -34,7 +34,7 @@ const (
 	CancelRefund    = "/xasset/trade/v1/cancelrefund"
 	ConfirmRefund   = "/xasset/trade/v1/confirmrefund"
 	RefuseRefund    = "/xasset/trade/v1/refuserefund"
-  QueryRefund     = "/xasset/trade/v1/qryrefund"
+	QueryRefund     = "/xasset/trade/v1/qryrefund"
 	QueryRefundPage = "/xasset/trade/v1/listrefundbystore"
 )
 
@@ -676,13 +676,13 @@ type QueryRefundParam struct {
 func (p *QueryRefundParam) Valid() error {
 	if p.Rid <= 0 {
 		return fmt.Errorf("rid invalid")
-  }
-  return nil
+	}
+	return nil
 }
 
 type QueryRefundResp struct {
 	BaseResp
-  Data RefundInfo `json:"data"`
+	Data RefundInfo `json:"data"`
 }
 
 type QueryRefundPageParam struct {
@@ -702,7 +702,7 @@ func (p *QueryRefundPageParam) Valid() error {
 	}
 	if p.Size < 0 {
 		return fmt.Errorf("cursor size invalid")
-  }
+	}
 }
 
 type RefundPageData struct {
