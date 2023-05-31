@@ -28,6 +28,12 @@ const (
 	HubListOrderPage = "/xasset/trade/v1/order_page"
 	CountOrder       = "/xasset/trade/v1/count_order"
 	SumOrderPrice    = "/xasset/trade/v1/sum_order_price"
+
+	CheckRefund   = "/xasset/trade/v1/checkrefund"
+	CreateRefund  = "/xasset/trade/v1/refund"
+	CancelRefund  = "/xasset/trade/v1/cancelrefund"
+	ConfirmRefund = "/xasset/trade/v1/confirmrefund"
+	RefuseRefund  = "/xasset/trade/v1/refuserefund"
 )
 
 // ///// Create Store /////////
@@ -545,4 +551,96 @@ type SumOrderPriceData struct {
 type SumOrderPriceResp struct {
 	BaseResp
 	Data SumOrderPriceData `json:"data"`
+}
+
+type CheckRefundParam struct {
+	Oid int64 `json:"oid"`
+}
+
+func (p *CheckRefundParam) Valid() error {
+	if p.Oid < 1 {
+		return fmt.Errorf("oid invalid")
+	}
+	return nil
+}
+
+type CheckRefundData struct {
+	Refundable   int `json:"refundable"`
+	RefuseReason int `json:"refuse_reason"`
+}
+
+type CheckRefundResp struct {
+	BaseResp
+	Data CheckRefundData `json:"data"`
+}
+
+type CreateRefundParam struct {
+	Oid     int64  `json:"oid"`
+	Address string `json:"address"`
+	Reason  string `json:"reason"`
+}
+
+func (p *CreateRefundParam) Valid() error {
+	if p.Oid < 1 {
+		return fmt.Errorf("oid invalid")
+	}
+	return nil
+}
+
+type CreateRefundData struct {
+	Rid          int64 `json:"rid"`
+	Refundable   int   `json:"refundable"`
+	RefuseReason int   `json:"refuse_reason"`
+}
+
+type CreateRefundResp struct {
+	BaseResp
+	Data CreateRefundData `json:"data"`
+}
+
+type CancelRefundParam struct {
+	Rid     int64  `json:"oid"`
+	Address string `json:"address"`
+}
+
+func (p *CancelRefundParam) Valid() error {
+	if p.Rid < 1 {
+		return fmt.Errorf("rid invalid")
+	}
+	return nil
+}
+
+type CancelRefundData struct {
+	Rid int64 `json:"rid"`
+}
+
+type CancelRefundResp struct {
+	BaseResp
+	Data CancelRefundData `json:"data"`
+}
+
+type ConfirmRefundParam struct {
+	Rid      int64  `json:"rid"`
+	Message  string `json:"message"`
+	Operator string `json:"operator"`
+}
+
+func (p *ConfirmRefundParam) Valid() error {
+	if p.Rid < 1 {
+		return fmt.Errorf("rid invalid")
+	}
+	return nil
+}
+
+type RefuseRefundParam struct {
+	Rid      int64  `json:"rid"`
+	Message  string `json:"message"`
+	Operator string `json:"operator"`
+}
+
+func (p *RefuseRefundParam) Valid() error {
+	if p.Rid < 1 {
+		return fmt.Errorf("rid invalid")
+	}
+	return nil
 }
