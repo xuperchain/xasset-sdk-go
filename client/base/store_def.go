@@ -36,6 +36,7 @@ const (
 	RefuseRefund    = "/xasset/trade/v1/refuserefund"
 	QueryRefund     = "/xasset/trade/v1/qryrefund"
 	QueryRefundPage = "/xasset/trade/v1/listrefundbystore"
+	SumRefundPrice  = "/xasset/trade/v1/sum_refund_price"
 )
 
 // ///// Create Store /////////
@@ -719,4 +720,26 @@ type RefundPageData struct {
 type QueryRefundPageResp struct {
 	BaseResp
 	Data RefundPageData `json:"data"`
+}
+
+type SumRefundPriceParam struct {
+	 StoreId      int64  `json:"store_id"`
+	 RefundStatus string `json:"refund_status"`
+}
+
+func (p *SumRefundPriceParam) Valid() error {
+	if p.StoreId < 0 {
+		return fmt.Errorf("store_id invalid")
+	}
+	return nil
+}
+
+type SumRefundData struct {
+	SumPrice    int `json:"sum_price"`
+	TotalAmount int `json:"total_amount"`
+}
+
+type SumRefundPriceResp struct {
+	BaseResp
+	Data SumRefundData `json:"data"`
 }
