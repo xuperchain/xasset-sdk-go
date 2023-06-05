@@ -529,6 +529,7 @@ type QueryShardMeta struct {
 	TxId       string          `json:"tx_id"`
 	AssetInfo  *ShardAssetInfo `json:"asset_info"`
 	Ctime      int64           `json:"ctime"`
+	Mtime      int64           `json:"mtime"`
 	Version    int64           `json:"version"`
 	ShardParam string          `json:"shard_param"`
 }
