@@ -1058,6 +1058,8 @@ func (t *StoreOper) CountOrder(param *xbase.CountOrderParam) (*xbase.CountOrderR
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
 	v.Set("status", fmt.Sprintf("%d", param.Status))
+	v.Set("act_id", fmt.Sprintf("%d", param.ActId))
+	v.Set("refund_status", fmt.Sprintf("%d", param.RefundStatus))
 
 	body := v.Encode()
 	res, err := t.Post(xbase.CountOrder, body)
@@ -1353,7 +1355,7 @@ func (t *StoreOper) QueryRefund(param *xbase.QueryRefundParam) (*xbase.QueryRefu
 	res, err := t.Post(xbase.QueryRefund, body)
 	if err != nil {
 		t.Logger.Warn("post request xasset failed, uri: %s, err: %v", xbase.QueryRefund, err)
-			return nil, nil, xbase.ComErrRequsetFailed
+		return nil, nil, xbase.ComErrRequsetFailed
 	}
 	if res.HttpCode != 200 {
 		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",

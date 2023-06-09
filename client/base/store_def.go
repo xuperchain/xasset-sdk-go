@@ -515,8 +515,10 @@ type HubOrderPageResp struct {
 }
 
 type CountOrderParam struct {
-	AssetId int64 `json:"asset_id"`
-	Status  int   `json:"status"`
+	AssetId      int64 `json:"asset_id"`
+	Status       int   `json:"status"`
+	ActId        int64 `json:"act_id"`
+	RefundStatus int   `json:"refund_status"`
 }
 
 func (p *CountOrderParam) Valid() error {
@@ -723,8 +725,8 @@ type QueryRefundPageResp struct {
 }
 
 type SumRefundPriceParam struct {
-	 StoreId      int64  `json:"store_id"`
-	 RefundStatus string `json:"refund_status"`
+	StoreId      int64  `json:"store_id"`
+	RefundStatus string `json:"refund_status"`
 }
 
 func (p *SumRefundPriceParam) Valid() error {
