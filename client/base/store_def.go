@@ -421,6 +421,7 @@ type HubOrderDetail struct {
 	CloseTime   int64    `json:"close_time"`
 	Ctime       int64    `json:"ctime"`
 	BuyCount    int      `json:"buy_count"`
+	AllowRef    int      `json:"allow_ref"`
 }
 
 type HubEditOrderParam struct {
