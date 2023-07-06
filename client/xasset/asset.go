@@ -2163,6 +2163,46 @@ func (t *AssetOper) VilgText2Img(param *xbase.VilgText2ImgParam) (*xbase.VilgTex
 	return &resp, res, nil
 }
 
+func (t *AssetOper) VilgText2ImgV2(param *xbase.VilgText2ImgV2Param) (*xbase.VilgText2ImgResp, *xbase.RequestRes, error) {
+	if err := param.Valid(); err != nil {
+		return nil, nil, err
+	}
+
+	v := url.Values{}
+	v.Set("text", param.Text)
+	v.Set("resolution", strconv.FormatInt(param.Resolution, 10))
+	v.Set("extend", param.Extend)
+	body := v.Encode()
+
+	res, err := t.Post(xbase.VilgApiText2ImgV2, body)
+	if err != nil {
+		t.Logger.Warn("post request xasset failed. err: %v", err)
+		return nil, nil, xbase.ComErrRequsetFailed
+	}
+	if res.HttpCode != 200 {
+		t.Logger.Warn("post request response is not 200. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, nil, xbase.ComErrRespCodeErr
+	}
+
+	var resp xbase.VilgText2ImgResp
+	err = json.Unmarshal([]byte(res.Body), &resp)
+	if err != nil {
+		t.Logger.Warn("unmarshal body failed. [http_code: %d] [url: %s] [body: %s] [trace_id: %s]",
+			res.HttpCode, res.ReqUrl, res.Body, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrUnmarshalBodyFailed
+	}
+	if resp.Errno != xbase.XassetErrNoSucc {
+		t.Logger.Warn("get resp failed. [url: %s] [request_id: %s] [err_no: %d] [trace_id: %s]",
+			res.ReqUrl, resp.RequestId, resp.Errno, t.GetTarceId(res.Header))
+		return nil, res, xbase.ComErrServRespErrnoErr
+	}
+
+	t.Logger.Trace("operate succ. [taskId:%+v] [url:%s] [request_id:%s] [trace_id:%s]",
+		resp.TaskId, res.ReqUrl, resp.RequestId, t.GetTarceId(res.Header))
+	return &resp, res, nil
+}
+
 func (t *AssetOper) VilgGetImg(taskId int64) (*xbase.VilgGetImgResp, *xbase.RequestRes, error) {
 	if taskId <= 0 {
 		return nil, nil, xbase.ErrParamInvalid

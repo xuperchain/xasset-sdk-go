@@ -47,9 +47,10 @@ const (
 	DidApiBindByUid    = "/xasset/did/v1/bindbyunionid"
 	DidApiGetAddrByUid = "/xasset/did/v1/getaddrbyunionid"
 
-	VilgApiText2Img = "/xasset/vilg/v1/text2img"
-	VilgApiGetImg   = "/xasset/vilg/v1/getimg"
-	VilgApiBalance  = "/xasset/vilg/v1/balance"
+	VilgApiText2Img   = "/xasset/vilg/v1/text2img"
+	VilgApiText2ImgV2 = "/xasset/vilg/v2/text2img"
+	VilgApiGetImg     = "/xasset/vilg/v1/getimg"
+	VilgApiBalance    = "/xasset/vilg/v1/balance"
 )
 
 type BoxAst struct {
@@ -1186,6 +1187,50 @@ func (t *VilgText2ImgParam) Valid() error {
 type VilgText2ImgResp struct {
 	BaseResp
 	TaskId int64 `json:"task_id"`
+}
+
+///////////// Vilg text2img v2 /////////////////
+
+var supportedResolutionV2 = map[int64]string{
+	1: "512*512",
+	2: "640*360",
+	3: "360*640",
+	4: "1024*1024",
+	5: "1280*720",
+	6: "720*1280",
+	7: "2048*2048",
+	8: "2560*1440",
+	9: "1440*2560",
+}
+
+type VilgText2ImgV2Param struct {
+	Text       string `json:"text"`       // 文本内容
+	Resolution int64  `json:"resolution"` // 分辨率
+	Extend     string `json:"extend"`     // 用户信息，查询时原样返回，长度100字符以内
+}
+
+func (t *VilgText2ImgV2Param) Valid() error {
+	if t == nil {
+		return ErrNilPointer
+	}
+
+	if len(t.Text) == 0 {
+		return ErrParamInvalid
+	}
+	words := utf8.RuneCountInString(t.Text)
+	if words == 0 || words > 100 {
+		return ErrParamInvalid
+	}
+
+	if _, exist := supportedResolutionV2[t.Resolution]; !exist {
+		return ErrParamInvalid
+	}
+
+	if utf8.RuneCountInString(t.Extend) > 100 {
+		return ErrParamInvalid
+	}
+
+	return nil
 }
 
 ///////////// Vilg getimg /////////////////

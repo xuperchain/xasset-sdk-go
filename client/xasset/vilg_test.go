@@ -28,6 +28,21 @@ func TestVilgText2Img(t *testing.T) {
 	fmt.Println("taskId:", resp.TaskId)
 }
 
+func TestVilgText2ImgV2(t *testing.T) {
+	h := getTestHandler()
+
+	param := base.VilgText2ImgV2Param{
+		Text:       "画一幅未来世界的景象",
+		Resolution: 5,
+	}
+	resp, _, err := h.VilgText2ImgV2(&param)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println("taskId:", resp.TaskId)
+}
+
 func TestVilgGetImg(t *testing.T) {
 	h := getTestHandler()
 
