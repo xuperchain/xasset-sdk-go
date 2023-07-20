@@ -263,6 +263,7 @@ type CreateAssetInfo struct {
 	AssetExt   string    `json:"asset_ext,omitempty"`
 	GroupId    int64     `json:"group_id,omitempty"`
 	ProcScript string    `json:"proc_script,omitempty"`
+	ExpireTime int64     `json:"expire_time,omitempty"`
 }
 
 func CreateAssetInfoValid(p *CreateAssetInfo) error {
@@ -335,6 +336,7 @@ type AlterAssetInfo struct {
 	AssetExt   string    `json:"asset_ext,omitempty"`
 	GroupId    int64     `json:"group_id,omitempty"`
 	ProcScript string    `json:"proc_script,omitempty"`
+	ExpireTime int64     `json:"expire_time,omitempty"`
 }
 
 func AlterAssetInfoValid(p *AlterAssetInfo) error {

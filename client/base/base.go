@@ -52,6 +52,9 @@ const (
 	AssetCateCompose = 23
 	// 24.大礼包
 	AssetCateGiftPack = 24
+	AssetCateOpenCard = 25
+	AssetCateXJCoupon = 26
+	AssetCateECoupon  = 31
 )
 
 // 列表分页范围限制
@@ -106,7 +109,7 @@ func HasAssetType(t AssetType) bool {
 }
 
 func AssetTypeValid(t AssetType) error {
-	if t >= AssetCateArt && t <= AssetCateGiftPack {
+	if t >= AssetCateArt && t <= AssetCateECoupon {
 		return nil
 	}
 	return ErrAssetTypeInvalid
