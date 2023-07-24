@@ -457,6 +457,7 @@ type QueryAssetMeta struct {
 	Version    int64      `json:"version"`
 	ViewType   int        `json:"view_type"`
 	AssetParam string     `json:"asset_param"`
+	ExpireTime int64      `json:"expire_time"`
 }
 
 ////////// Grant Asset /////////////
@@ -535,6 +536,7 @@ type QueryShardMeta struct {
 	Mtime      int64           `json:"mtime"`
 	Version    int64           `json:"version"`
 	ShardParam string          `json:"shard_param"`
+	ExpireTime int64           `json:"expire_time"`
 }
 
 type ShardAssetInfo struct {
