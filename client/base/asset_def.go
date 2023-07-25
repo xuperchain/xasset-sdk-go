@@ -81,8 +81,14 @@ func (t *SelBoxAstParam) Valid() error {
 
 type SelBoxAstResp struct {
 	BaseResp
-	RealAstId int64  `json:"real_asset_id"`
-	Token     string `json:"token"`
+	RealAstId int64      `json:"real_asset_id"`
+	Token     string     `json:"token"`
+	Gift      []*BoxGift `json:"gift"`
+}
+
+type BoxGift struct {
+	AssetId int64 `json:"asset_id"`
+	Amount  int   `json:"amount"`
 }
 
 type GrantBoxParam struct {
@@ -182,7 +188,7 @@ type ComposeResp struct {
 	ShardId int64 `json:"shard_id"`
 }
 
-/////// Gen Token /////////
+// ///// Gen Token /////////
 type GetStokenParam struct {
 	Account *auth.Account `json:"account"`
 }
@@ -213,7 +219,7 @@ type GetStokenResp struct {
 	AccessInfo *AccessInfo `json:"accessInfo"`
 }
 
-//////// Upload File /////////////
+// ////// Upload File /////////////
 // Account 创建资产区块链账户
 // FileName 文件名称
 // FilePath 文件绝对路径
@@ -251,7 +257,7 @@ type UploadFileResp struct {
 	AccessInfo *AccessInfo `json:"accessInfo"`
 }
 
-///////// Create Asset ///////////
+// /////// Create Asset ///////////
 type CreateAssetInfo struct {
 	AssetCate  AssetType `json:"asset_cate"`
 	Title      string    `json:"title"`
@@ -324,7 +330,7 @@ type CreateAssetResp struct {
 	AssetId int64 `json:"asset_id"`
 }
 
-///////// Alter Asset //////////
+// /////// Alter Asset //////////
 type AlterAssetInfo struct {
 	AssetCate  AssetType `json:"asset_cate,omitempty"`
 	Title      string    `json:"title,omitempty"`
@@ -392,7 +398,7 @@ func (t *AlterAssetParam) Valid() error {
 	return nil
 }
 
-////////// Publish Asset ////////////
+// //////// Publish Asset ////////////
 type PublishAssetParam struct {
 	AssetId    int64         `json:"asset_id"`
 	Account    *auth.Account `json:"account"`
@@ -415,7 +421,7 @@ func (t *PublishAssetParam) Valid() error {
 	return nil
 }
 
-////////// Query Asset //////////
+// //////// Query Asset //////////
 type QueryAssetParam struct {
 	AssetId int64 `json:"asset_id"`
 }
@@ -460,7 +466,7 @@ type QueryAssetMeta struct {
 	ExpireTime int64      `json:"expire_time"`
 }
 
-////////// Grant Asset /////////////
+// //////// Grant Asset /////////////
 type GrantAssetParam struct {
 	AssetId    int64         `json:"asset_id"`
 	ShardId    int64         `json:"shard_id"`
@@ -500,7 +506,7 @@ type GrantAssetResp struct {
 	ShardId int64 `json:"shard_id"`
 }
 
-////////// Query Shard ////////////
+// //////// Query Shard ////////////
 type QueryShardParam struct {
 	AssetId int64 `json:"asset_id"`
 	ShardId int64 `json:"shard_id"`
@@ -550,7 +556,7 @@ type ShardAssetInfo struct {
 	GroupId    int64      `json:"group_id"`
 }
 
-///////// List Shard By Address //////////
+// /////// List Shard By Address //////////
 type ListShardsByAddrParam struct {
 	Addr  string `json:"addr"`
 	Page  int    `json:"page"`
@@ -578,7 +584,7 @@ type ListShardsByAddrResp struct {
 	TotalCnt int               `json:"total_cnt"`
 }
 
-///////// List Assets By Address //////////
+// /////// List Assets By Address //////////
 type ListAssetsByAddrParam struct {
 	Addr   string `json:"addr"`
 	Status int    `json:"status"`
@@ -605,7 +611,7 @@ type ListAssetsByAddrResp struct {
 	TotalCnt int               `json:"total_cnt"`
 }
 
-//////////// listdiffbyaddr /////////////////
+// ////////// listdiffbyaddr /////////////////
 type ListDiffByAddrParam struct {
 	Addr string `json:"addr"`
 	// 可选参数
@@ -648,7 +654,7 @@ type ListDiffByAddrResp struct {
 	HasMore int                   `json:"has_more"`
 }
 
-///////// List Shards By Asset //////////
+// /////// List Shards By Asset //////////
 type ListShardsByAssetParam struct {
 	AssetId int64  `json:"asset_id"`
 	Cursor  string `json:"cursor"`
@@ -675,7 +681,7 @@ type ListShardsByAssetResp struct {
 	HasMore int               `json:"has_more"`
 }
 
-///////////// Get Evidence Info /////////////
+// /////////// Get Evidence Info /////////////
 type GetEvidenceInfoParam struct {
 	AssetId int64 `json:"asset_id"`
 }
@@ -708,7 +714,7 @@ type HoraeAssetObject struct {
 	ShortDesc string     `json:"short_desc"`
 }
 
-////////// Transfer Asset //////////
+// //////// Transfer Asset //////////
 type TransferAssetParam struct {
 	AssetId  int64         `json:"asset_id"`
 	ShardId  int64         `json:"shard_id"`
@@ -744,7 +750,7 @@ func (p *TransferAssetParam) Valid() error {
 	return nil
 }
 
-////////// Freeze Asset ////////////
+// //////// Freeze Asset ////////////
 type FreezeAssetParam struct {
 	AssetId int64         `json:"asset_id"`
 	Account *auth.Account `json:"account"`
@@ -763,7 +769,7 @@ func (t *FreezeAssetParam) Valid() error {
 	return nil
 }
 
-////////// Consume Shard ////////////
+// //////// Consume Shard ////////////
 type ConsumeShardParam struct {
 	AssetId  int64         `json:"asset_id"`
 	ShardId  int64         `json:"shard_id"`
@@ -793,7 +799,7 @@ func (t *ConsumeShardParam) Valid() error {
 	return nil
 }
 
-////////// Get History ////////////
+// //////// Get History ////////////
 type ListAssetHisParam struct {
 	AssetId int64 `json:"asset_id"`
 	ShardId int64 `json:"shard_id"`
@@ -833,7 +839,7 @@ type ListAssetHistoryResp struct {
 	HasMore  int            `json:"has_more"`
 }
 
-////////// Upgrade Asset ////////////
+// //////// Upgrade Asset ////////////
 type UpgradeAstParam struct {
 	AssetId    int64  `json:"asset_id"`
 	AssetParam string `json:"asset_param"`
@@ -852,7 +858,7 @@ func (t *UpgradeAstParam) Valid() error {
 	return nil
 }
 
-////////// Upgrade Shard ////////////
+// //////// Upgrade Shard ////////////
 type UpgradeSdsParam struct {
 	AssetId    int64  `json:"asset_id"`
 	ShardId    int64  `json:"shard_id"`
@@ -875,7 +881,7 @@ func (t *UpgradeSdsParam) Valid() error {
 	return nil
 }
 
-////////// Lock or freeze Shard ////////////
+// //////// Lock or freeze Shard ////////////
 type LockOrFreezeShardParam struct {
 	AssetId int64
 	ShardId int64
@@ -902,7 +908,7 @@ func (t *LockOrFreezeShardParam) Valid() error {
 	return nil
 }
 
-////////// Scene ListShardByAddr ////////////
+// //////// Scene ListShardByAddr ////////////
 type SceneListShardByAddrParam struct {
 	Addr   string `json:"addr"`
 	Token  string `json:"token"`
@@ -937,7 +943,7 @@ type SceneListMeta struct {
 	Thumb   []ThumbMap `json:"thumb"`
 }
 
-////////// Scene QueryShard ////////////
+// //////// Scene QueryShard ////////////
 type SceneQueryShardParam struct {
 	Addr    string `json:"addr"`
 	Token   string `json:"token"`
@@ -986,7 +992,7 @@ type SceneQueryMeta struct {
 	CreateAddr string     `json:"create_addr"`
 }
 
-//////////// Scene listdiffbyaddr /////////////////
+// ////////// Scene listdiffbyaddr /////////////////
 type SceneListDiffByAddrParam struct {
 	Addr  string `json:"addr"`
 	Token string `json:"token"`
@@ -1014,7 +1020,7 @@ func (t *SceneListDiffByAddrParam) Valid() error {
 	return nil
 }
 
-//////////// Scene hasassetbyaddr ///////////////
+// ////////// Scene hasassetbyaddr ///////////////
 type SceneHasAssetByAddrParam struct {
 	Addr     string `json:"addr"`
 	Token    string `json:"token"`
@@ -1042,7 +1048,7 @@ type SceneHasAssetByAddrResp struct {
 	Result map[string]int `json:"result"`
 }
 
-//////////// Scene listaddr /////////////////////
+// ////////// Scene listaddr /////////////////////
 type AddrGroupToken struct {
 	Addr    string `json:"addr"`
 	GroupId int64  `json:"group_id"`
@@ -1053,7 +1059,7 @@ type SceneListAddrResp struct {
 	List []*AddrGroupToken `json:"list"`
 }
 
-//////////// Bdbox register ////////////////////
+// ////////// Bdbox register ////////////////////
 type BdBoxRegisterParam struct {
 	OpenId string `json:"open_id"`
 	AppKey string `json:"app_key"`
@@ -1079,7 +1085,7 @@ type BdBoxRegisterResp struct {
 	IsNew    int    `json:"is_new"`
 }
 
-///////////// Bdbox bind ////////////////////////
+// /////////// Bdbox bind ////////////////////////
 type BdBoxBindParam struct {
 	OpenId   string `json:"open_id"`
 	AppKey   string `json:"app_key"`
@@ -1102,7 +1108,7 @@ func (t *BdBoxBindParam) Valid() error {
 	return nil
 }
 
-///////////// Bind by union id /////////////////
+// /////////// Bind by union id /////////////////
 type BindByUnionIdParam struct {
 	UnionId  string `json:"union_id"`
 	Mnemonic string `json:"mnemonic"`
@@ -1121,13 +1127,13 @@ func (t *BindByUnionIdParam) Valid() error {
 	return nil
 }
 
-//////////// Get addr by union id /////////////
+// ////////// Get addr by union id /////////////
 type GetAddrByUnionIdResp struct {
 	BaseResp
 	Address string `json:"address"`
 }
 
-///////////// Vilg text2img /////////////////
+// /////////// Vilg text2img /////////////////
 var supportedStyle = map[int64]string{
 	1:  "古风",
 	2:  "二次元",
