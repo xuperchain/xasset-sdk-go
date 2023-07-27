@@ -416,12 +416,35 @@ type HubOrderDetail struct {
 	OriginPrice int      `json:"origin_price"`
 	PayPrice    int      `json:"pay_price"`
 	SinglePrice int      `json:"single_price"`
+	TotalPrice  int      `json:"total_price"`
 	TimeExpire  int64    `json:"time_expire"`
 	PayTime     int64    `json:"pay_time"`
 	CloseTime   int64    `json:"close_time"`
 	Ctime       int64    `json:"ctime"`
 	BuyCount    int      `json:"buy_count"`
 	AllowRef    int      `json:"allow_ref"`
+
+	Gift    *GetFreebiesResp `json:"gift,omitempty"`
+	Coupons []*CouponResp    `json:"coupons,omitempty"`
+}
+
+type Freebie struct {
+	AssetId int64    `json:"asset_id"`
+	Thumb   []string `json:"thumb"`
+	Title   string   `json:"title"`
+	Desc    string   `json:"desc"`
+	Count   int      `json:"count"`
+}
+
+type GetFreebiesResp struct {
+	Object        []*Freebie `json:"object"`
+	GetExpireTime int64      `json:"gift_vtime"`
+	Status        int        `json:"status"`
+}
+
+type CouponResp struct {
+	Count int `json:"count"`
+	Value int `json:"value"`
 }
 
 type HubEditOrderParam struct {
