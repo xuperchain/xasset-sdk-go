@@ -424,8 +424,8 @@ type HubOrderDetail struct {
 	BuyCount    int      `json:"buy_count"`
 	AllowRef    int      `json:"allow_ref"`
 
-	Gift    *GetFreebiesResp `json:"gift,omitempty"`
-	Coupons []*CouponResp    `json:"coupons,omitempty"`
+	Gift    *GiftInfo     `json:"gift,omitempty"`
+	Coupons []*CouponInfo `json:"coupons,omitempty"`
 }
 
 type Freebie struct {
@@ -436,13 +436,13 @@ type Freebie struct {
 	Count   int      `json:"count"`
 }
 
-type GetFreebiesResp struct {
+type GiftInfo struct {
 	Object        []*Freebie `json:"object"`
 	GetExpireTime int64      `json:"gift_vtime"`
 	Status        int        `json:"status"`
 }
 
-type CouponResp struct {
+type CouponInfo struct {
 	Count int `json:"count"`
 	Value int `json:"value"`
 }
