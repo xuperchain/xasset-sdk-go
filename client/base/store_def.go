@@ -535,6 +535,7 @@ func (p *CountOrderParam) Valid() error {
 type CountOrderData struct {
 	Total       int64 `json:"total"`
 	BuyCountSum int64 `json:"buy_count_sum"`
+	PayPriceSum int64 `json:"pay_price_sum"`
 }
 
 type CountOrderResp struct {
