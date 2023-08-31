@@ -70,10 +70,11 @@ func MakeBlindBoxScript(astList []*BoxAst) string {
 type SelBoxAstParam struct {
 	AssetId int64
 	ShardId int64
+	Address string
 }
 
 func (t *SelBoxAstParam) Valid() error {
-	if t.AssetId < 1 || t.ShardId < 1 {
+	if t.AssetId < 1 || t.ShardId < 1 || t.Address == "" {
 		return ErrAssetInvalid
 	}
 	return nil

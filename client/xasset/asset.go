@@ -1089,6 +1089,7 @@ func (t *AssetOper) genSelBoxAstBody(param *xbase.SelBoxAstParam) (string, error
 	v := url.Values{}
 	v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
 	v.Set("shard_id", fmt.Sprintf("%d", param.ShardId))
+	v.Set("address", param.Address)
 	body := v.Encode()
 	return body, nil
 }
