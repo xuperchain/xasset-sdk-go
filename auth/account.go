@@ -1,7 +1,10 @@
 package auth
 
 import (
+	"strings"
+
 	"github.com/xuperchain/crypto/client/service/xchain"
+	"github.com/xuperchain/crypto/core/hdwallet/wordlist"
 )
 
 // 助记词强度：弱、中、强
@@ -75,4 +78,22 @@ func RetrieveAccountByMnemonic(mnemonic string, language int) (*Account, error) 
 	}
 
 	return acc, nil
+}
+
+// InferLanguage 根据助记词推测语言
+//  如果推测失败，返回 0
+//  这里不做合法性检查，仅推测可能值
+func InferLanguage(mnemonic string) int {
+	ss := strings.Split(mnemonic, " ")
+	if len(ss) == 0 {
+		return 0
+	}
+
+	if _, exist := wordlist.ReversedEnglishWordMap[ss[0]]; exist {
+		return int(MnemLangEN)
+	} else if _, exist := wordlist.ReversedSimplifiedChineseWordMap[ss[0]]; exist {
+		return int(MnemLangCN)
+	}
+
+	return 0
 }
