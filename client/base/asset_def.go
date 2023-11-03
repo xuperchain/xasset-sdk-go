@@ -563,7 +563,8 @@ type ListShardsByAddrParam struct {
 	Page  int    `json:"page"`
 	Limit int    `json:"limit"`
 	// 可选
-	AssetId int64 `json:"asset_id"`
+	AssetId int64       `json:"asset_id"`
+	Status  interface{} `json:"status"` //using type interface distinguish default nil and 0
 }
 
 func (t *ListShardsByAddrParam) Valid() error {
