@@ -778,6 +778,14 @@ func (t *AssetOper) genListShardsByAddrBody(param *xbase.ListShardsByAddrParam) 
 	if param.AssetId > 0 {
 		v.Set("asset_id", fmt.Sprintf("%d", param.AssetId))
 	}
+	if param.Status != nil {
+		intStatus, ok := param.Status.(int)
+		if !ok {
+			return "", xbase.ErrStatusInvalid
+		}
+		v.Set("status", fmt.Sprintf("%d", intStatus))
+	}
+
 	body := v.Encode()
 	return body, nil
 }
@@ -786,7 +794,10 @@ func (t *AssetOper) ListShardsByAddr(param *xbase.ListShardsByAddrParam) (*xbase
 	if err := param.Valid(); err != nil {
 		return nil, nil, err
 	}
-	body, _ := t.genListShardsByAddrBody(param)
+	body, err := t.genListShardsByAddrBody(param)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	res, err := t.Post(xbase.AssetApiListShardsByAddr, body)
 	if err != nil {
